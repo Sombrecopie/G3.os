@@ -246,14 +246,16 @@
         justify-content: center;
         font-size: 12px;
       }
-      @media (max-width: 768px) {
-        .tray-icon {
-          display: none;
-        }
-        .tray-icon:last-of-type {
-          display: flex;
-        }
-      }
+@media (max-width: 768px) {
+  .tray-icon {
+    display: none;
+  }
+  .tray-icon:last-of-type,
+  #volume-icon {  /* ← Ajout de cette ligne */
+    display: flex;
+  }
+}
+
       #clock {
         font-size: 11px;
         padding: 0 4px;
