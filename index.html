@@ -2218,7 +2218,7 @@
                   <div style="text-align: center; cursor: pointer;" class="cdrom-item"><div style="font-size: 32px;">📀</div><div style="font-size: 10px;">CD-ROM (D:)</div></div>
                   <div style="text-align: center;"><div style="font-size: 32px;">🖨️</div><div style="font-size: 10px;">Printers</div></div>
                   <div style="text-align: center;"><div style="font-size: 32px;">⚙️</div><div style="font-size: 10px;">Control Panel</div></div>
-                  <div style="text-align: center;"><div style="font-size: 32px;">☎️</div><div style="font-size: 10px;">Dial-Up</div></div>
+                  <div style="text-align: center;" class="dialup-item"><div style="font-size: 32px;">☎️</div><div style="font-size: 10px;">Dial-Up</div></div>
                 </div>
               </div>
             </div>
@@ -3398,22 +3398,21 @@
     } catch(e) {}
   }
 
-  // Helper: detect elements that likely represent the Dial Up action
-  function containsDialUpText(el){
-    if (!el) return false;
-    const txt = (el.textContent || '').toLowerCase();
-    return txt.includes('dial up') || txt.includes('dial-up') || txt.includes('connexion commutée') || txt.includes('modem');
-  }
-
-  // Global delegated click listener to catch clicks on the Dial Up item anywhere
+  // Global delegated click listener to catch clicks on the Dial Up item in My Computer only
   document.addEventListener('click', (e) => {
     const target = e.target;
-    // Common selectors an app/icon might use
-    const selector = '[data-action="dial-up"], [data-app="dial-up"], [data-id="dial-up"], #dial-up, .dial-up, [aria-label*="Dial Up" i], [title*="Dial Up" i]';
-    const match = target.closest ? target.closest(selector) : null;
+    // Only detect clicks on the specific dialup-item class in My Computer window
+    const dialupItem = target.closest ? target.closest('.dialup-item') : null;
 
-    if (match || containsDialUpText(target) || containsDialUpText(target.closest && target.closest('[role="button"], .icon, .shortcut, .menu-item, .item'))) {
-      playDialUpSound();
+    if (dialupItem) {
+      // Verify we're in a My Computer window by checking for the window title
+      const windowEl = dialupItem.closest('.window');
+      if (windowEl) {
+        const titleBar = windowEl.querySelector('.title-bar-text');
+        if (titleBar && titleBar.textContent.includes('My Computer')) {
+          playDialUpSound();
+        }
+      }
     }
   }, true); // capture to run before other handlers, but harmless if bubbling
 })();
