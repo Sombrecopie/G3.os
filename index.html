@@ -960,23 +960,23 @@
         </div>
         <ul class="todo-list">
           <li class="todo-item">
-            <input type="checkbox" class="win95 todo-checkbox" id="task1" /><label for="task1" class="todo-text"
-              >Get at least 70% score on /30 in the reflex game</label
-            >
-          </li>
-          <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task2" /><label for="task2" class="todo-text"
-              >Find 6
+              >Find 7
               <img
                 src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
                 style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
               />
-              tokens (<span id="token-count">0</span>/6)</label
+              tokens (<span id="token-count">0</span>/7)</label
             >
           </li>
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task4" /><label for="task4" class="todo-text"
               >Win a Minesweeper game</label
+            >
+          </li>
+          <li class="todo-item">
+            <input type="checkbox" class="win95 todo-checkbox" id="task1" /><label for="task1" class="todo-text"
+              >Find token</label
             >
           </li>
           <li class="todo-item" id="task3-container">
@@ -1013,7 +1013,7 @@
           <button class="window-close" id="volume-game-close">✕</button>
         </div>
         <div class="volume-game-content">
-          <div class="game-instructions">Cliquez quand le curseur est sur la zone verte !</div>
+          <div class="game-instructions">Click when the cursor is on the green zone!</div>
           <div class="volume-bar-container">
             <div class="volume-bar">
               <div class="volume-target" id="volume-target"></div>
@@ -1022,7 +1022,7 @@
           </div>
           <div class="game-score" id="game-score">Score: 0 / 0</div>
           <div class="game-message" id="game-message"></div>
-          <button class="game-reset-btn" id="game-reset">Nouvelle partie</button>
+          <button class="game-reset-btn" id="game-reset">New Game</button>
         </div>
       </div>
     </div>
@@ -1215,7 +1215,7 @@
           if (counter) {
             counter.textContent = this.tokensFound;
           }
-          if (this.tokensFound >= 6) {
+          if (this.tokensFound >= 7) {
             document.getElementById("task2").checked = true;
           }
           const clippy = document.getElementById("clippy");
@@ -1814,7 +1814,7 @@
               </div>
               <h3 style="color: #00ff88; margin-bottom: 8px;"><img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 20px; height: 20px; vertical-align: middle; image-rendering: pixelated;"> Token Found!</h3>
               <p>You found a hidden token!</p>
-              <p style="margin-top: 8px;"><strong>${this.tokensFound}/6</strong> tokens collected</p>
+              <p style="margin-top: 8px;"><strong>${this.tokensFound}/7</strong> tokens collected</p>
               <br>
               <button class="win95 close-window-btn">OK</button>
             </div>
@@ -1835,7 +1835,7 @@
               });
             }
           }, 50);
-          if (this.tokensFound >= 6) {
+          if (this.tokensFound >= 7) {
             setTimeout(() => {
               document.getElementById("task2").checked = true;
               this.unlockSnake();
@@ -3441,7 +3441,7 @@
   let attempts = 0;
   let speed = 2;
 
-  // Positionner la cible à un endroit aléatoire
+  // Position the target at a random location
   function randomizeTarget() {
     const barHeight = 250;
     const targetHeight = 40;
@@ -3451,20 +3451,20 @@
     return randomTop;
   }
 
-  // Ouvrir le modal
+  // Open the modal
   function openGame() {
     modal.style.display = 'flex';
     resetGame();
     startAnimation();
   }
 
-  // Fermer le modal
+  // Close the modal
   function closeGame() {
     modal.style.display = 'none';
     stopAnimation();
   }
 
-  // Démarrer l'animation du curseur
+  // Start cursor animation
   function startAnimation() {
     if (isPlaying) return;
     isPlaying = true;
@@ -3474,7 +3474,7 @@
 
       cursorPosition += direction * speed;
 
-      // Rebondir aux limites
+      // Bounce at boundaries
       if (cursorPosition >= 242) {
         cursorPosition = 242;
         direction = -1;
@@ -3490,7 +3490,7 @@
     animate();
   }
 
-  // Arrêter l'animation
+  // Stop animation
   function stopAnimation() {
     isPlaying = false;
     if (animationFrame) {
@@ -3499,7 +3499,7 @@
     }
   }
 
-  // Vérifier si le curseur est sur la cible
+  // Check if cursor is on target
   function checkHit() {
     if (!isPlaying) return;
 
@@ -3510,26 +3510,26 @@
     const cursorTop = cursorPosition;
     const cursorBottom = cursorPosition + 8;
 
-    // Vérifier si le curseur touche la cible
+    // Check if cursor touches the target
     const isHit = (cursorTop >= targetTop && cursorTop <= targetBottom) ||
                   (cursorBottom >= targetTop && cursorBottom <= targetBottom) ||
                   (cursorTop <= targetTop && cursorBottom >= targetBottom);
 
     if (isHit) {
       score++;
-      messageDisplay.textContent = '✓ Parfait !';
+      messageDisplay.textContent = '✓ Perfect!';
       messageDisplay.className = 'game-message success';
 
-      // Accélérer légèrement
+      // Slightly increase speed
       speed = Math.min(speed + 0.3, 5);
 
-      // Nouvelle cible après un court délai
+      // New target after a short delay
       setTimeout(() => {
         randomizeTarget();
         messageDisplay.textContent = '';
       }, 500);
     } else {
-      messageDisplay.textContent = '✗ Raté !';
+      messageDisplay.textContent = '✗ Missed!';
       messageDisplay.className = 'game-message fail';
 
       setTimeout(() => {
@@ -3540,19 +3540,24 @@
     updateScore();
   }
 
-  // Mettre à jour l'affichage du score
+  // Update score display
   function updateScore() {
     const percentage = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
     scoreDisplay.textContent = `Score: ${score} / ${attempts} (${percentage}%)`;
 
-    // Vérifier si l'objectif est atteint : 70% ou plus sur 30 tentatives
+    // Check if objective is achieved: 70% or more on 30 attempts
     if (attempts >= 30 && percentage >= 70 && localStorage.getItem('task1-completed') !== 'true') {
       localStorage.setItem('task1-completed', 'true');
       document.getElementById('task1').checked = true;
 
-      // Message de félicitations
+      // Award token
+      if (typeof simOS !== 'undefined' && simOS.foundToken) {
+        simOS.foundToken('reflex-game');
+      }
+
+      // Congratulations message
       setTimeout(() => {
-        messageDisplay.textContent = '🎉 Objectif atteint ! Bravo !';
+        messageDisplay.textContent = '🎉 Objective achieved! Well done!';
         messageDisplay.className = 'game-message success';
         messageDisplay.style.fontSize = '14px';
         messageDisplay.style.fontWeight = 'bold';
@@ -3560,7 +3565,7 @@
     }
   }
 
-  // Réinitialiser le jeu
+  // Reset the game
   function resetGame() {
     score = 0;
     attempts = 0;
@@ -3587,7 +3592,7 @@
     }
   });
 
-  // Clic sur la barre pour tenter de toucher la cible
+  // Click on the bar to attempt hitting the target
   const volumeBar = document.querySelector('.volume-bar');
   volumeBar.addEventListener('click', checkHit);
 
@@ -3598,7 +3603,7 @@
     }
   });
 
-  // Initialiser la position de la cible
+  // Initialize target position
   randomizeTarget();
 })();
 </script>
