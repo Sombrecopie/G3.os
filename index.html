@@ -1044,7 +1044,6 @@
           // Secret tracking variables
           this.clockClicks = 0;
           this.clockClickTimer = null;
-          this.emptyWindowsTimer = null;
           this.myComputerOpenCount = 0;
           this.firstTokenTime = null;
           this.paintDrawTime = 0;
@@ -1578,11 +1577,6 @@
             }, 500);
           }
 
-          // Clear Minimalist timer if windows are opened
-          if (this.emptyWindowsTimer) {
-            clearTimeout(this.emptyWindowsTimer);
-            this.emptyWindowsTimer = null;
-          }
         }
 
         setActiveWindow(windowId) {
@@ -1621,20 +1615,6 @@
                   "You've closed 20 windows! Some say you're organized. Others say you're running from commitment. Either way, you're a master of closure."
                 );
               }, 300);
-            }
-
-            // The Minimalist - 0 windows for 60 seconds
-            if (this.windows.size === 0 && !localStorage.getItem("og-secret-minimalist")) {
-              if (this.emptyWindowsTimer) clearTimeout(this.emptyWindowsTimer);
-              this.emptyWindowsTimer = setTimeout(() => {
-                if (this.windows.size === 0) {
-                  this.foundSecret(
-                    "minimalist",
-                    "The Minimalist",
-                    "One minute of pure emptiness. Zen mode achieved. In the void, you found enlightenment."
-                  );
-                }
-              }, 60000);
             }
           }
         }
@@ -1949,7 +1929,7 @@
               </div>
               <h3 style="color: #00ff88; margin-bottom: 8px;"><img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 20px; height: 20px; vertical-align: middle; image-rendering: pixelated;"> Token Found!</h3>
               <p>You found a hidden token!</p>
-              <p style="margin-top: 8px;"><strong>${this.tokensFound}/7</strong> tokens collected</p>
+              <p style="margin-top: 8px;"><strong>${this.tokensFound}/11</strong> tokens collected</p>
               <br>
               <button class="win95 close-window-btn">OK</button>
             </div>
@@ -2970,15 +2950,6 @@
               description: "Clicked time itself",
               detail: "3x in 2 seconds",
               hint: "Three strikes upon the clock within two heartbeats. Time bends for those who dare to click its face."
-            },
-            {
-              id: "minimalist",
-              name: "The Minimalist",
-              emoji: "🧘",
-              category: "BEHAVIORAL",
-              description: "Achieved zen mode",
-              detail: "0 windows for 60 seconds",
-              hint: "In the void, enlightenment awaits. One minute of absolute emptiness. No windows, no distractions."
             },
             {
               id: "maximalist",
