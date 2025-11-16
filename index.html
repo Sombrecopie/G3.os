@@ -961,12 +961,12 @@
         <ul class="todo-list">
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task2" /><label for="task2" class="todo-text"
-              >Find 7
+              >Find all
               <img
                 src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
                 style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
               />
-              tokens (<span id="token-count">0</span>/7)</label
+              tokens (<span id="token-count">0</span>/11)</label
             >
           </li>
           <li class="todo-item">
@@ -976,7 +976,7 @@
           </li>
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task1" /><label for="task1" class="todo-text"
-              >Find token</label
+              >Success 70% score on 30 tries on reflex game</label
             >
           </li>
           <li class="todo-item" id="task3-container">
@@ -1215,7 +1215,7 @@
           if (counter) {
             counter.textContent = this.tokensFound;
           }
-          if (this.tokensFound >= 7) {
+          if (this.tokensFound >= 11) {
             document.getElementById("task2").checked = true;
           }
           const clippy = document.getElementById("clippy");
@@ -1835,10 +1835,14 @@
               });
             }
           }, 50);
-          if (this.tokensFound >= 7) {
+          if (this.tokensFound >= 10) {
+            setTimeout(() => {
+              this.unlockSnake();
+            }, 1000);
+          }
+          if (this.tokensFound >= 11) {
             setTimeout(() => {
               document.getElementById("task2").checked = true;
-              this.unlockSnake();
             }, 1000);
           }
         }
@@ -1848,7 +1852,7 @@
             <div style="padding: 24px; text-align: center;">
               <div style="font-size: 64px; margin-bottom: 16px;">🎉</div>
               <h2 style="color: #00ff88; margin-bottom: 12px;">CONGRATULATIONS!</h2>
-              <p style="margin-bottom: 8px;">You found all 6 tokens!</p>
+              <p style="margin-bottom: 8px;">You found 10 tokens!</p>
               <p style="font-weight: bold; margin-bottom: 20px;">🐍 SNAKE GAME UNLOCKED! 🐍</p>
               <p style="font-size: 10px; color: #666; margin-bottom: 16px;">A new icon has appeared on your desktop!</p>
               <button class="win95 close-window-btn" style="background: #00ff88; font-weight: bold;">AWESOME!</button>
@@ -2075,6 +2079,7 @@
                 localStorage.setItem("task3-completed", "true");
                 const task3 = document.getElementById("task3");
                 if (task3) task3.checked = true;
+                this.foundToken("snake-victory");
                 if (gameLoop) clearInterval(gameLoop);
                 document.removeEventListener("keydown", keyHandler);
                 setTimeout(() => {
@@ -2679,59 +2684,92 @@
         <strong>TOKEN #1: "The Aesthete"</strong><br>
         <span style="color: #888; font-size: 10px;">Hint: "Beauty lies in the eye of the beholder. Transform your canvas, claim your prize."</span><br>
         <span class="secret-reveal" data-secret="1" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
-        <span class="secret-answer" data-secret="1" style="display: none; color: #ffff00; font-size: 10px;"><br>→ My Documents → Select any wallpaper</span>
+        <span class="secret-answer" data-secret="1" style="display: none; color: #ff0000; font-size: 10px;"><br>→ My Documents → Select any wallpaper</span>
       </div>
       
       <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
         <strong>TOKEN #2: "The Idle Mind"</strong><br>
         <span style="color: #888; font-size: 10px;">Hint: "In stillness, visions emerge. Fifteen heartbeats of absolute silence..."</span><br>
         <span class="secret-reveal" data-secret="2" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
-        <span class="secret-answer" data-secret="2" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Don't move mouse/keyboard for 15 seconds</span>
+        <span class="secret-answer" data-secret="2" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Don't move mouse/keyboard for 15 seconds</span>
       </div>
       
       <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
-        <strong>TOKEN #3: "The Incantation"</strong><br>
-        <span style="color: #888; font-size: 10px;">Hint: "Speak our true name where commands are born. 01100111 01100001 01101101 00110011 01110011"</span><br>
-        <span class="secret-reveal" data-secret="3" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
-        <span class="secret-answer" data-secret="3" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Start → Run → Decode binary → Type result</span>
-      </div>
-      
-      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
-        <strong>TOKEN #4: "The Persistent One"</strong><br>
+        <strong>TOKEN #3: "The Persistent One"</strong><br>
         <span style="color: #888; font-size: 10px;">Hint: "The metal guardian watches you. Persistence shall be rewarded. Six is the number."</span><br>
-        <span class="secret-reveal" data-secret="4" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
-        <span class="secret-answer" data-secret="4" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Click Clippy 6 times on sticky note</span>
+        <span class="secret-reveal" data-secret="3" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="3" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Click Clippy 6 times on sticky note</span>
       </div>
-      
+
       <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
-        <strong>TOKEN #5: "The Archaeologist"</strong><br>
+        <strong>TOKEN #4: "The Archaeologist"</strong><br>
         <span style="color: #888; font-size: 10px;">Hint: "Among the discarded remnants at depth 75, treasure awaits the patient scroller."</span><br>
-        <span class="secret-reveal" data-secret="5" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
-        <span class="secret-answer" data-secret="5" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Recycle Bin → Scroll to item 75</span>
+        <span class="secret-reveal" data-secret="4" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="4" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Recycle Bin → Scroll to item 75</span>
       </div>
-      
+
       <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
-        <strong>TOKEN #6: "The Minimalist"</strong><br>
+        <strong>TOKEN #5: "The Minimalist"</strong><br>
         <span style="color: #888; font-size: 10px;">Hint: "Five windows hidden bring chaos unveiled. The system breaks, rewards prevail."</span><br>
+        <span class="secret-reveal" data-secret="5" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="5" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Minimize 5 windows simultaneously</span>
+      </div>
+
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #6: "The Helper"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "In the machine's heart, seek wisdom's menu."</span><br>
         <span class="secret-reveal" data-secret="6" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
-        <span class="secret-answer" data-secret="6" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Minimize 5 windows simultaneously</span>
+        <span class="secret-answer" data-secret="6" style="display: none; color: #ff0000; font-size: 10px;"><br>→ My Computer → Click Help menu</span>
       </div>
-      
+
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #7: "The Seeker"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Where searches begin, rewards may end."</span><br>
+        <span class="secret-reveal" data-secret="7" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="7" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Start → Find → Click 'Find a Token!'</span>
+      </div>
+
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #8: "The Generous Collector"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Gifts arrive for the dedicated collector." [Requires 4 tokens]</span><br>
+        <span class="secret-reveal" data-secret="8" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="8" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Collect 4 tokens → Check email → Claim reward</span>
+      </div>
+
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #9: "The Deminer"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Silver disc holds explosive challenges."</span><br>
+        <span class="secret-reveal" data-secret="9" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="9" style="display: none; color: #ff0000; font-size: 10px;"><br>→ My Computer → Floppy Disk → Win Minesweeper</span>
+      </div>
+
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #10: "The Reflex Master"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Precision and speed unlock the final prize."</span><br>
+        <span class="secret-reveal" data-secret="10" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="10" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Volume Control → Success 70% on 30 tries</span>
+      </div>
+
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #11: "The Snake Champion"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Master the serpent's path and reach the ultimate score."</span><br>
+        <span class="secret-reveal" data-secret="11" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="11" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Collect 10 tokens → Play Snake → Reach score 30</span>
+      </div>
+
       <hr style="border: 1px solid #808080; margin: 12px 0;">
-      
+
       <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #ff8800;">
-        <strong>CRYPTIC WHISPERS (Location Unknown):</strong><br>
-        <span style="color: #888; font-size: 10px;">• "In the machine's heart, seek wisdom's menu"</span><br>
-        <span style="color: #888; font-size: 10px;">• "Where searches begin, rewards may end"</span><br>
-        <span style="color: #888; font-size: 10px;">• "Binary speaks to those with eyes to see" [Req: 2 tokens]</span><br>
-        <span style="color: #888; font-size: 10px;">• "Gifts arrive for the dedicated collector" [Req: 4 tokens]</span><br>
-        <span style="color: #888; font-size: 10px;">• "Silver disc holds explosive challenges"</span>
+        <strong>EASTER EGG (Non-Token Secret):</strong><br>
+        <span style="color: #888; font-size: 10px;">• "The Incantation" - Speak our true name where commands are born.</span><br>
+        <span style="color: #888; font-size: 10px;">  Binary whispers: 01100111 01100001 01101101 00110011 01110011</span><br>
+        <span style="color: #666; font-size: 9px; font-style: italic;">  (This unlocks a secret, but does not award a token)</span>
       </div>
-      
+
       <hr style="border: 1px solid #808080; margin: 12px 0;">
       <div style="text-align: center; font-size: 9px; color: #666;">
         "The path is hidden, the rewards immense."<br>
-        "Six fragments unlock what lies beyond."<br>
+        "Eleven fragments unlock what lies beyond."<br>
         <span style="color: #00ff88;">- Cipher Master, G3.OS Archives</span>
       </div>
     </div>
@@ -3123,7 +3161,7 @@
                 <h3>Find <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 16px; height: 16px; vertical-align: middle; image-rendering: pixelated;"> Tokens</h3>
               </div>
               <p style="margin-bottom: 12px;">Hidden <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated;"> tokens are scattered throughout G3.OS!</p>
-              <p style="margin-bottom: 12px;">Current progress: <strong>${this.tokensFound}/6</strong></p>
+              <p style="margin-bottom: 12px;">Current progress: <strong>${this.tokensFound}/11</strong></p>
               <div style="background: #ffffff; border: 2px solid #808080; border-style: inset; padding: 8px; margin: 12px 0;">
                 <p style="font-size: 10px; color: #666;">💡 Tip: Try exploring different menus and clicking on things...</p>
               </div>
