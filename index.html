@@ -1013,7 +1013,7 @@
           <button class="window-close" id="volume-game-close">✕</button>
         </div>
         <div class="volume-game-content">
-          <div class="game-instructions">Cliquez quand le curseur est sur la zone verte !</div>
+          <div class="game-instructions">Click when the cursor is on the green zone!</div>
           <div class="volume-bar-container">
             <div class="volume-bar">
               <div class="volume-target" id="volume-target"></div>
@@ -1022,7 +1022,7 @@
           </div>
           <div class="game-score" id="game-score">Score: 0 / 0</div>
           <div class="game-message" id="game-message"></div>
-          <button class="game-reset-btn" id="game-reset">Nouvelle partie</button>
+          <button class="game-reset-btn" id="game-reset">New Game</button>
         </div>
       </div>
     </div>
@@ -3442,7 +3442,7 @@
   let attempts = 0;
   let speed = 2;
 
-  // Positionner la cible à un endroit aléatoire
+  // Position the target at a random location
   function randomizeTarget() {
     const barHeight = 250;
     const targetHeight = 40;
@@ -3452,20 +3452,20 @@
     return randomTop;
   }
 
-  // Ouvrir le modal
+  // Open the modal
   function openGame() {
     modal.style.display = 'flex';
     resetGame();
     startAnimation();
   }
 
-  // Fermer le modal
+  // Close the modal
   function closeGame() {
     modal.style.display = 'none';
     stopAnimation();
   }
 
-  // Démarrer l'animation du curseur
+  // Start the cursor animation
   function startAnimation() {
     if (isPlaying) return;
     isPlaying = true;
@@ -3475,7 +3475,7 @@
 
       cursorPosition += direction * speed;
 
-      // Rebondir aux limites
+      // Bounce at boundaries
       if (cursorPosition >= 242) {
         cursorPosition = 242;
         direction = -1;
@@ -3491,7 +3491,7 @@
     animate();
   }
 
-  // Arrêter l'animation
+  // Stop the animation
   function stopAnimation() {
     isPlaying = false;
     if (animationFrame) {
@@ -3500,7 +3500,7 @@
     }
   }
 
-  // Vérifier si le curseur est sur la cible
+  // Check if the cursor is on the target
   function checkHit() {
     if (!isPlaying) return;
 
@@ -3518,19 +3518,19 @@
 
     if (isHit) {
       score++;
-      messageDisplay.textContent = '✓ Parfait !';
+      messageDisplay.textContent = '✓ Perfect!';
       messageDisplay.className = 'game-message success';
 
-      // Accélérer légèrement
+      // Slightly increase speed
       speed = Math.min(speed + 0.3, 5);
 
-      // Nouvelle cible après un court délai
+      // New target after a short delay
       setTimeout(() => {
         randomizeTarget();
         messageDisplay.textContent = '';
       }, 500);
     } else {
-      messageDisplay.textContent = '✗ Raté !';
+      messageDisplay.textContent = '✗ Missed!';
       messageDisplay.className = 'game-message fail';
 
       setTimeout(() => {
@@ -3541,24 +3541,24 @@
     updateScore();
   }
 
-  // Mettre à jour l'affichage du score
+  // Update the score display
   function updateScore() {
     const percentage = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
     scoreDisplay.textContent = `Score: ${score} / ${attempts} (${percentage}%)`;
 
-    // Vérifier si l'objectif est atteint : 70% ou plus sur 30 tentatives
+    // Check if the goal is reached: 70% or more on 30 attempts
     if (attempts >= 30 && percentage >= 70 && localStorage.getItem('task1-completed') !== 'true') {
       localStorage.setItem('task1-completed', 'true');
       document.getElementById('task1').checked = true;
 
-      // Donner le token
+      // Give the token
       if (window.simOS && typeof window.simOS.foundToken === 'function') {
         window.simOS.foundToken('reflex-game');
       }
 
-      // Message de félicitations
+      // Congratulations message
       setTimeout(() => {
-        messageDisplay.textContent = '🎉 Objectif atteint ! Bravo !';
+        messageDisplay.textContent = '🎉 Goal achieved! Well done!';
         messageDisplay.className = 'game-message success';
         messageDisplay.style.fontSize = '14px';
         messageDisplay.style.fontWeight = 'bold';
@@ -3566,7 +3566,7 @@
     }
   }
 
-  // Réinitialiser le jeu
+  // Reset the game
   function resetGame() {
     score = 0;
     attempts = 0;
@@ -3593,7 +3593,7 @@
     }
   });
 
-  // Clic sur la barre pour tenter de toucher la cible
+  // Click on the bar to try to hit the target
   const volumeBar = document.querySelector('.volume-bar');
   volumeBar.addEventListener('click', checkHit);
 
@@ -3604,7 +3604,7 @@
     }
   });
 
-  // Initialiser la position de la cible
+  // Initialize the target position
   randomizeTarget();
 })();
 </script>
