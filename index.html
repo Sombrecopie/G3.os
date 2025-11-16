@@ -1039,6 +1039,21 @@
           this.idleTimer = null;
           this.screensaverActive = false;
           this.minimizedWindowCount = 0;
+
+          // Secret tracking variables
+          this.clockClicks = 0;
+          this.clockClickTimer = null;
+          this.emptyWindowsTimer = null;
+          this.myComputerOpenCount = 0;
+          this.firstTokenTime = null;
+          this.paintDrawTime = 0;
+          this.paintDrawTimer = null;
+          this.secretsFileOpenCount = 0;
+          this.wallpaperChangeCount = 0;
+          this.dragCount = 0;
+          this.currentDragStartTime = null;
+          this.clickTimes = [];
+
           this.init();
         }
 
@@ -1051,6 +1066,7 @@
           this.loadSavedWallpaper();
           this.checkSnakeUnlock();
           this.setupScreensaver();
+          this.setupSecretDetection();
         }
 
         checkSnakeUnlock() {
@@ -1182,6 +1198,21 @@
             if (clockEl && !this._clockClickBound) {
               this._clockClickBound = true;
               clockEl.addEventListener("click", () => {
+                // Time Traveler secret - 3 clicks in 2 seconds
+                this.clockClicks++;
+                if (this.clockClickTimer) clearTimeout(this.clockClickTimer);
+                this.clockClickTimer = setTimeout(() => {
+                  this.clockClicks = 0;
+                }, 2000);
+
+                if (this.clockClicks === 3 && !localStorage.getItem("og-secret-time-traveler")) {
+                  this.foundSecret(
+                    "time-traveler",
+                    "The Time Traveler",
+                    "You've discovered the fourth dimension! Three clicks on time itself. In G3.OS, time is just a construct."
+                  );
+                }
+
                 if (this._clockClickCount < 0) return; // already triggered
                 this._clockClickCount++;
                 if (this._clockClickCount >= 10) {
@@ -1285,6 +1316,19 @@
             stickyNote.style.right = "auto";
           });
           document.addEventListener("mouseup", () => {
+            if (isDragging) {
+              // The Drag Queen - Drag sticky note 20 times
+              this.dragCount++;
+              if (this.dragCount === 20 && !localStorage.getItem("og-secret-drag-queen")) {
+                setTimeout(() => {
+                  this.foundSecret(
+                    "drag-queen",
+                    "The Drag Queen",
+                    "Twenty drags of the sticky note! Still searching for the perfect spot? Feng shui: desktop edition. The vibes are immaculate now."
+                  );
+                }, 500);
+              }
+            }
             isDragging = false;
           });
         }
@@ -1518,6 +1562,23 @@
           windowElement.addEventListener("mousedown", () => {
             this.setActiveWindow(windowId);
           });
+
+          // The Maximalist - 10 windows open
+          if (this.windows.size >= 10 && !localStorage.getItem("og-secret-maximalist")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "maximalist",
+                "The Maximalist",
+                "Ten windows open simultaneously. Your desktop is chaos incarnate. Beautiful, productive chaos."
+              );
+            }, 500);
+          }
+
+          // Clear Minimalist timer if windows are opened
+          if (this.emptyWindowsTimer) {
+            clearTimeout(this.emptyWindowsTimer);
+            this.emptyWindowsTimer = null;
+          }
         }
 
         setActiveWindow(windowId) {
@@ -1556,6 +1617,20 @@
                   "You've closed 20 windows! Some say you're organized. Others say you're running from commitment. Either way, you're a master of closure."
                 );
               }, 300);
+            }
+
+            // The Minimalist - 0 windows for 10 seconds
+            if (this.windows.size === 0 && !localStorage.getItem("og-secret-minimalist")) {
+              if (this.emptyWindowsTimer) clearTimeout(this.emptyWindowsTimer);
+              this.emptyWindowsTimer = setTimeout(() => {
+                if (this.windows.size === 0) {
+                  this.foundSecret(
+                    "minimalist",
+                    "The Minimalist",
+                    "Ten seconds of pure emptiness. Zen mode achieved. In the void, you found enlightenment."
+                  );
+                }
+              }, 10000);
             }
           }
         }
@@ -1846,6 +1921,22 @@
           if (counter) {
             counter.textContent = this.tokensFound;
           }
+
+          // The Speedrunner - 3 tokens in 60 seconds
+          const now = Date.now();
+          if (!this.firstTokenTime) {
+            this.firstTokenTime = now;
+          }
+          const elapsedSeconds = (now - this.firstTokenTime) / 1000;
+          if (this.tokensFound === 3 && elapsedSeconds <= 60 && !localStorage.getItem("og-secret-speedrunner")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "speedrunner",
+                "The Speedrunner",
+                "Three tokens in under 60 seconds?! SPEEDRUN MODE ACTIVATED! You're not playing G3.OS, you're breaking it."
+              );
+            }, 1000);
+          }
           const content = `
             <div style="padding: 16px; text-align: center;">
               <div style="margin-bottom: 10px;">
@@ -1920,6 +2011,62 @@
               });
             }
           }, 50);
+        }
+
+        setupSecretDetection() {
+          // F5 Addict - Detect page reloads
+          const pageLoadCount = parseInt(localStorage.getItem("og-page-loads") || "0") + 1;
+          localStorage.setItem("og-page-loads", pageLoadCount.toString());
+          if (pageLoadCount === 5 && !localStorage.getItem("og-secret-f5-addict")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "f5-addict",
+                "The F5 Addict",
+                "Five page reloads detected. Commitment issues? Or just testing? Either way, you're persistent!"
+              );
+            }, 2000);
+          }
+
+          // Night Owl - Check if playing between midnight and 5am
+          const hour = new Date().getHours();
+          if (hour >= 0 && hour < 5) {
+            setTimeout(() => {
+              this.foundSecret(
+                "night-owl",
+                "The Night Owl",
+                "It's past midnight and you're exploring a retro OS. The best code is written at 3 AM, they say. Welcome, fellow night dweller."
+              );
+            }, 3000);
+          }
+
+          // Spam Clicker - Detect 50 clicks in 5 seconds
+          document.addEventListener("click", (e) => {
+            const now = Date.now();
+            this.clickTimes.push(now);
+            this.clickTimes = this.clickTimes.filter(t => now - t < 5000);
+
+            if (this.clickTimes.length >= 50 && !localStorage.getItem("og-secret-spam-clicker")) {
+              this.foundSecret(
+                "spam-clicker",
+                "The Spam Clicker",
+                "50 clicks in 5 seconds?! CLICK CLICK CLICK CLICK. Calm down, the UI can't handle this energy!"
+              );
+            }
+          });
+
+          // Inspector - Detect DevTools
+          const checkDevTools = () => {
+            if ((window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160)) {
+              if (!localStorage.getItem("og-secret-inspector")) {
+                this.foundSecret(
+                  "inspector",
+                  "The Inspector",
+                  "Looking under the hood? DevTools detected. Respect the curiosity. Hack the planet!"
+                );
+              }
+            }
+          };
+          setInterval(checkDevTools, 1000);
         }
 
         unlockSnake() {
@@ -2283,6 +2430,18 @@
         }
 
         openExplorer() {
+          // The Double Agent - Open My Computer 2x
+          this.myComputerOpenCount++;
+          if (this.myComputerOpenCount === 2 && !localStorage.getItem("og-secret-double-agent")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "double-agent",
+                "The Double Agent",
+                "Inception detected. You've opened a window within Windows 95... within a browser. Reality is layered."
+              );
+            }, 500);
+          }
+
           const content = `
             <div style="display: flex; height: 100%;">
               <div style="width: 150px; border-right: 1px solid #808080; padding: 8px; overflow-y: auto;">
@@ -2443,6 +2602,18 @@
         }
 
         setWallpaper(url, id) {
+          // The Wallpaper Addict - Change wallpaper 5 times
+          this.wallpaperChangeCount++;
+          if (this.wallpaperChangeCount === 5 && !localStorage.getItem("og-secret-wallpaper-addict")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "wallpaper-addict",
+                "The Wallpaper Addict",
+                "Fifth wallpaper change! Interior design is your passion. Can't decide? Why not change it again in 5 minutes?"
+              );
+            }, 800);
+          }
+
           const desktop = document.getElementById("desktop");
           desktop.style.backgroundImage = `url('${url}')`;
           desktop.style.backgroundSize = "cover";
@@ -2681,16 +2852,32 @@
           }
           canvas.addEventListener("mousedown", (e) => {
             isDrawing = true;
+            this.currentDragStartTime = Date.now();
             draw(e);
           });
           canvas.addEventListener("mousemove", (e) => {
             if (isDrawing) draw(e);
           });
           canvas.addEventListener("mouseup", () => {
+            if (isDrawing && this.currentDragStartTime) {
+              const drawDuration = (Date.now() - this.currentDragStartTime) / 1000;
+              this.paintDrawTime += drawDuration;
+              if (this.paintDrawTime >= 30 && !localStorage.getItem("og-secret-painter")) {
+                this.foundSecret(
+                  "painter",
+                  "The Painter",
+                  "Thirty seconds of pure artistic expression. Art takes time, and you've created something... unique."
+                );
+              }
+            }
             isDrawing = false;
             ctx.beginPath();
           });
           canvas.addEventListener("mouseleave", () => {
+            if (isDrawing && this.currentDragStartTime) {
+              const drawDuration = (Date.now() - this.currentDragStartTime) / 1000;
+              this.paintDrawTime += drawDuration;
+            }
             isDrawing = false;
             ctx.beginPath();
           });
@@ -2764,6 +2951,18 @@
         }
 
         openSecretsFile() {
+          // The Archaeologist - Open secrets.txt 5 times
+          this.secretsFileOpenCount++;
+          if (this.secretsFileOpenCount === 5 && !localStorage.getItem("og-secret-archaeologist")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "archaeologist",
+                "The Archaeologist",
+                "Five visits to the archives. Still searching for clues? The real treasure was the obsession we developed along the way."
+              );
+            }, 500);
+          }
+
           const content = `
     <div style="padding: 12px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6;">
       <div style="text-align: center; margin-bottom: 12px; font-weight: bold; color: #00ff88;">=== G3.OS SECRET ARCHIVES ===</div>
@@ -2857,6 +3056,54 @@
           <span style="color: #888; font-size: 10px;">  Binary whispers: 01100111 01100001 01101101 00110011 01110011</span><br>
         </div>
         <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Time Traveler" - Three strikes upon the clock within two heartbeats.</span><br>
+          <span style="color: #888; font-size: 10px;">  Time bends for those who dare to click its face.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Minimalist" - In the void, enlightenment awaits.</span><br>
+          <span style="color: #888; font-size: 10px;">  Ten seconds of absolute emptiness. No windows, no distractions.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Maximalist" - Ten worlds open simultaneously.</span><br>
+          <span style="color: #888; font-size: 10px;">  Chaos incarnate. Your desktop bleeds with productivity.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Night Owl" - The hour between midnight and dawn.</span><br>
+          <span style="color: #888; font-size: 10px;">  When normal souls sleep, explorers boot up G3.OS.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Double Agent" - Inception within Windows within browser.</span><br>
+          <span style="color: #888; font-size: 10px;">  Open the computer twice. Reality layers upon itself.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Speedrunner" - Three tokens in sixty ticks of time.</span><br>
+          <span style="color: #888; font-size: 10px;">  Speed meets skill. No hesitation, only execution.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Painter" - Thirty seconds of continuous artistic flow.</span><br>
+          <span style="color: #888; font-size: 10px;">  The canvas knows when true dedication touches its surface.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Archaeologist" - Five pilgrimages to the sacred archives.</span><br>
+          <span style="color: #888; font-size: 10px;">  The seeker reads secrets.txt again and again. Obsession rewarded.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Wallpaper Addict" - Five transformations of the canvas.</span><br>
+          <span style="color: #888; font-size: 10px;">  Interior design is passion. Change it once, change it forever.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Matrix" - Type the name of reality where commands dwell.</span><br>
+          <span style="color: #888; font-size: 10px;">  Green rain falls. Neo awaits. The truth is a six-letter word.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Inspector" - Pull back the curtain. Peek behind the simulation.</span><br>
+          <span style="color: #888; font-size: 10px;">  Press F12 or right-click inspect. The code sees all.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The F5 Addict" - Five resurrections of the page.</span><br>
+          <span style="color: #888; font-size: 10px;">  Commitment issues detected. Refresh, restart, reload. Persevere.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
           <span style="color: #888; font-size: 10px;">• "The Clippy Conspiracy" - The assistant knows more than he lets on.</span><br>
           <span style="color: #888; font-size: 10px;">  Persistence beyond the sixth revelation shall unveil the truth.</span><br>
         </div>
@@ -2867,6 +3114,14 @@
         <div style="margin-top: 8px;">
           <span style="color: #888; font-size: 10px;">• "The Janitor" - In the Recycle Bin's depths, past the seventy-fifth treasure,</span><br>
           <span style="color: #888; font-size: 10px;">  lies a file that refuses to die. Seek the hundredth item.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Drag Queen" - Twenty journeys across the desktop.</span><br>
+          <span style="color: #888; font-size: 10px;">  The sticky note seeks its perfect position. Help it find peace.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Spam Clicker" - Fifty clicks in five heartbeats.</span><br>
+          <span style="color: #888; font-size: 10px;">  CLICK CLICK CLICK. The UI trembles at your energy.</span><br>
         </div>
         <div style="margin-top: 8px;">
           <span style="color: #666; font-size: 9px; font-style: italic;">  (These unlock secrets, but do not award tokens)</span>
@@ -3181,6 +3436,14 @@
                 if (command === "gam3s") {
                   this.showAchievement();
                   this.closeWindow(win.id);
+                } else if (command === "matrix") {
+                  this.foundSecret(
+                    "matrix",
+                    "The Matrix",
+                    "Wake up, Neo... The Matrix has you. Follow the white rabbit. Reality is an illusion. G3.OS is the truth."
+                  );
+                  this.closeWindow(win.id);
+                  setTimeout(() => this.showMatrixEffect(), 500);
                 }
               });
             }
@@ -3222,6 +3485,62 @@
               });
             }
           }, 50);
+        }
+
+        showMatrixEffect() {
+          // Create matrix rain effect overlay
+          const overlay = document.createElement("div");
+          overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 999999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+          `;
+          document.body.appendChild(overlay);
+
+          const canvas = document.createElement("canvas");
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          canvas.style.cssText = "position: absolute; top: 0; left: 0;";
+          overlay.appendChild(canvas);
+
+          const ctx = canvas.getContext("2d");
+          const chars = "01ГƎ∀MƎS".split("");
+          const fontSize = 14;
+          const columns = canvas.width / fontSize;
+          const drops = Array(Math.floor(columns)).fill(1);
+
+          setTimeout(() => { overlay.style.opacity = "0.9"; }, 10);
+
+          const draw = () => {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0f0";
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+              const text = chars[Math.floor(Math.random() * chars.length)];
+              ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+              if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+              }
+              drops[i]++;
+            }
+          };
+
+          const interval = setInterval(draw, 33);
+
+          setTimeout(() => {
+            clearInterval(interval);
+            overlay.style.opacity = "0";
+            setTimeout(() => overlay.remove(), 500);
+          }, 3000);
         }
 
         showShutdownDialog() {
