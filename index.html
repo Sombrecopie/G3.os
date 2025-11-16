@@ -2917,9 +2917,9 @@
                   <div style="font-size: 32px;">📁</div>
                   <div style="font-size: 10px;">old_files</div>
                 </div>
-                <div style="text-align: center; cursor: pointer;" class="paint-file">
-                  <div style="font-size: 32px;">🎨</div>
-                  <div style="font-size: 10px;">paint.exe</div>
+                <div style="text-align: center; cursor: pointer;" class="achievements-file">
+                  <div style="font-size: 32px;">🏆</div>
+                  <div style="font-size: 10px;">achievements.exe</div>
                 </div>
               </div>
             </div>
@@ -2941,13 +2941,280 @@
                 this.openSecretsFile();
               });
             }
-            const paintFile = win.querySelector(".paint-file");
-            if (paintFile) {
-              paintFile.addEventListener("dblclick", () => {
-                this.openPaint();
+            const achievementsFile = win.querySelector(".achievements-file");
+            if (achievementsFile) {
+              achievementsFile.addEventListener("dblclick", () => {
+                this.openAchievements();
               });
             }
           }, 100);
+        }
+
+        getAchievementsData() {
+          return [
+            // BEHAVIORAL SECRETS
+            {
+              id: "time-traveler",
+              name: "The Time Traveler",
+              emoji: "🕐",
+              category: "BEHAVIORAL",
+              description: "Clicked time itself",
+              detail: "3x in 2 seconds",
+              hint: "Three strikes upon the clock within two heartbeats. Time bends for those who dare to click its face."
+            },
+            {
+              id: "minimalist",
+              name: "The Minimalist",
+              emoji: "🧘",
+              category: "BEHAVIORAL",
+              description: "Achieved zen mode",
+              detail: "0 windows for 10 seconds",
+              hint: "In the void, enlightenment awaits. Ten seconds of absolute emptiness. No windows, no distractions."
+            },
+            {
+              id: "maximalist",
+              name: "The Maximalist",
+              emoji: "📚",
+              category: "BEHAVIORAL",
+              description: "Chaos incarnate",
+              detail: "10 windows open simultaneously",
+              hint: "Ten worlds open simultaneously. Chaos incarnate. Your desktop bleeds with productivity."
+            },
+            {
+              id: "night-owl",
+              name: "The Night Owl",
+              emoji: "🦉",
+              category: "BEHAVIORAL",
+              description: "3 AM coder detected",
+              detail: "Played between midnight-5am",
+              hint: "The hour between midnight and dawn. When normal souls sleep, explorers boot up G3.OS."
+            },
+            {
+              id: "drag-queen",
+              name: "The Drag Queen",
+              emoji: "👑",
+              category: "BEHAVIORAL",
+              description: "Feng shui master",
+              detail: "Dragged sticky note 20x",
+              hint: "Twenty journeys across the desktop. The sticky note seeks its perfect position. Help it find peace."
+            },
+            {
+              id: "spam-clicker",
+              name: "The Spam Clicker",
+              emoji: "💥",
+              category: "BEHAVIORAL",
+              description: "CLICK CLICK CLICK",
+              detail: "50 clicks in 5 seconds",
+              hint: "Fifty clicks in five heartbeats. CLICK CLICK CLICK. The UI trembles at your energy."
+            },
+
+            // EXPLORATION SECRETS
+            {
+              id: "double-agent",
+              name: "The Double Agent",
+              emoji: "🕵️",
+              category: "EXPLORATION",
+              description: "Inception detected",
+              detail: "Opened My Computer twice",
+              hint: "Inception within Windows within browser. Open the computer twice. Reality layers upon itself."
+            },
+            {
+              id: "archaeologist",
+              name: "The Archaeologist",
+              emoji: "🏺",
+              category: "EXPLORATION",
+              description: "Archive obsession",
+              detail: "Opened secrets.txt 5 times",
+              hint: "Five pilgrimages to the sacred archives. The seeker reads secrets.txt again and again. Obsession rewarded."
+            },
+            {
+              id: "the-janitor",
+              name: "The Janitor",
+              emoji: "🗑️",
+              category: "EXPLORATION",
+              description: "Found the forbidden file",
+              detail: "Item 100 in Recycle Bin",
+              hint: "In the Recycle Bin's depths, past the seventy-fifth treasure, lies a file that refuses to die. Seek the hundredth item."
+            },
+            {
+              id: "the-closer",
+              name: "The Closer",
+              emoji: "📁",
+              category: "EXPLORATION",
+              description: "Master of closure",
+              detail: "Closed 20 windows",
+              hint: "Twenty windows closed, a pattern revealed. Are you organized, or running from commitment?"
+            },
+            {
+              id: "wallpaper-addict",
+              name: "The Wallpaper Addict",
+              emoji: "🖼️",
+              category: "EXPLORATION",
+              description: "Interior design passion",
+              detail: "Changed wallpaper 5 times",
+              hint: "Five transformations of the canvas. Interior design is passion. Change it once, change it forever."
+            },
+
+            // SKILL SECRETS
+            {
+              id: "speedrunner",
+              name: "The Speedrunner",
+              emoji: "⚡",
+              category: "SKILL",
+              description: "SPEEDRUN MODE",
+              detail: "3 tokens in 60 seconds",
+              hint: "Three tokens in sixty ticks of time. Speed meets skill. No hesitation, only execution."
+            },
+            {
+              id: "painter",
+              name: "The Painter",
+              emoji: "🎨",
+              category: "SKILL",
+              description: "Artistic dedication",
+              detail: "Drew for 30 seconds",
+              hint: "Thirty seconds of continuous artistic flow. The canvas knows when true dedication touches its surface."
+            },
+            {
+              id: "clippy-conspiracy",
+              name: "The Clippy Conspiracy",
+              emoji: "📎",
+              category: "SKILL",
+              description: "Clippy's deepest secret",
+              detail: "Clicked Clippy 20 times",
+              hint: "The assistant knows more than he lets on. Persistence beyond the sixth revelation shall unveil the truth."
+            },
+
+            // META SECRETS
+            {
+              id: "matrix",
+              name: "The Matrix",
+              emoji: "💚",
+              category: "META",
+              description: "Wake up, Neo...",
+              detail: "Typed 'matrix' in Run",
+              hint: "Type the name of reality where commands dwell. Green rain falls. Neo awaits. The truth is a six-letter word."
+            },
+            {
+              id: "inspector",
+              name: "The Inspector",
+              emoji: "🔍",
+              category: "META",
+              description: "Hacker mode activated",
+              detail: "Opened DevTools (F12)",
+              hint: "Pull back the curtain. Peek behind the simulation. Press F12 or right-click inspect. The code sees all."
+            },
+            {
+              id: "f5-addict",
+              name: "The F5 Addict",
+              emoji: "🔄",
+              category: "META",
+              description: "Commitment issues detected",
+              detail: "Reloaded page 5 times",
+              hint: "Five resurrections of the page. Commitment issues detected. Refresh, restart, reload. Persevere."
+            },
+            {
+              id: "incantation",
+              name: "The Incantation",
+              emoji: "🎮",
+              category: "META",
+              description: "True GAM3R",
+              detail: "Typed 'gam3s' in Run",
+              hint: "Speak our true name where commands are born. Binary whispers: 01100111 01100001 01101101 00110011 01110011"
+            }
+          ];
+        }
+
+        openAchievements() {
+          const achievements = this.getAchievementsData();
+
+          // Count unlocked achievements
+          let unlockedCount = 0;
+          achievements.forEach(ach => {
+            if (localStorage.getItem(`og-secret-${ach.id}`)) {
+              unlockedCount++;
+            }
+          });
+
+          const totalCount = achievements.length;
+          const percentage = Math.round((unlockedCount / totalCount) * 100);
+
+          // Group by category
+          const categories = {
+            "BEHAVIORAL": [],
+            "EXPLORATION": [],
+            "SKILL": [],
+            "META": []
+          };
+
+          achievements.forEach(ach => {
+            const unlocked = localStorage.getItem(`og-secret-${ach.id}`) !== null;
+            categories[ach.category].push({ ...ach, unlocked });
+          });
+
+          // Build HTML
+          let html = `
+            <div style="padding: 16px; font-family: 'MS Sans Serif', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; height: 100%; overflow-y: auto;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="color: #00ff88; font-size: 24px; margin: 0 0 8px 0; text-shadow: 0 0 10px #00ff88;">🏆 ACHIEVEMENTS 🏆</h1>
+                <div style="background: rgba(0,255,136,0.1); border: 2px solid #00ff88; padding: 8px; border-radius: 4px; display: inline-block;">
+                  <span style="font-size: 16px; font-weight: bold; color: #00ff88;">${unlockedCount}/${totalCount}</span>
+                  <span style="color: #888; font-size: 12px; margin-left: 8px;">(${percentage}%)</span>
+                </div>
+              </div>
+          `;
+
+          // Render each category
+          Object.keys(categories).forEach(categoryName => {
+            html += `
+              <div style="margin-bottom: 20px;">
+                <div style="color: #00ff88; font-size: 11px; font-weight: bold; margin-bottom: 12px; letter-spacing: 1px;">━━━ ${categoryName} SECRETS ━━━</div>
+            `;
+
+            categories[categoryName].forEach(ach => {
+              const bgColor = ach.unlocked ? "rgba(0,255,136,0.1)" : "rgba(128,128,128,0.1)";
+              const borderColor = ach.unlocked ? "#00ff88" : "#555";
+              const textColor = ach.unlocked ? "#fff" : "#888";
+              const statusIcon = ach.unlocked ? "✅" : "🔒";
+              const statusText = ach.unlocked ? "UNLOCKED!" : "LOCKED";
+              const statusColor = ach.unlocked ? "#00ff88" : "#ff6600";
+
+              html += `
+                <div style="background: ${bgColor}; border: 2px solid ${borderColor}; border-radius: 4px; padding: 12px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center;">
+                  <div style="background: rgba(0,0,0,0.3); border-radius: 4px; width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div style="font-size: 28px;">${ach.emoji}</div>
+                    <div style="font-size: 16px; margin-top: 4px;">${statusIcon}</div>
+                  </div>
+                  <div style="flex: 1; color: ${textColor};">
+                    <div style="font-weight: bold; font-size: 13px; margin-bottom: 4px;">${ach.name}</div>
+                    <div style="font-size: 11px; opacity: 0.9;">
+                      ${ach.unlocked ? ach.description : "???"}
+                    </div>
+                    <div style="font-size: 10px; margin-top: 4px; opacity: 0.7;">
+                      ${ach.unlocked ? ach.detail : ach.hint}
+                    </div>
+                    <div style="color: ${statusColor}; font-size: 10px; font-weight: bold; margin-top: 6px;">
+                      ${statusText}
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+
+            html += `</div>`;
+          });
+
+          html += `
+            </div>
+          `;
+
+          const win = this.createWindow({
+            title: "🏆 Achievements - G3.OS Edition",
+            content: html,
+            width: 500,
+            height: 500,
+            x: window.innerWidth / 2 - 250,
+            y: window.innerHeight / 2 - 250,
+          });
         }
 
         openSecretsFile() {
