@@ -2611,39 +2611,10 @@
           const isFirstWallpaper = !localStorage.getItem("og-wallpaper");
           localStorage.setItem("og-wallpaper", url);
           localStorage.setItem("og-wallpaper-id", id);
-          const task1 = document.getElementById("task1");
-          if (task1 && !task1.checked) {
-            task1.checked = true;
-            if (isFirstWallpaper) {
-              setTimeout(() => {
-                this.foundToken("wallpaper-chosen");
-              }, 500);
-            }
-            const content = `
-              <div style="padding: 16px; text-align: center;">
-                <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
-                <h3 style="margin-bottom: 8px;">Task Completed!</h3>
-                <p>You have chosen a wallpaper!</p>
-                <br>
-                <button class="win95 close-window-btn">OK</button>
-              </div>
-            `;
-            const win = this.createWindow({
-              title: "Success",
-              content,
-              width: 280,
-              height: 180,
-              x: window.innerWidth / 2 - 140,
-              y: window.innerHeight / 2 - 90,
-            });
+          if (isFirstWallpaper) {
             setTimeout(() => {
-              const btn = win.querySelector(".close-window-btn");
-              if (btn) {
-                btn.addEventListener("click", () => {
-                  this.closeWindow(win.id);
-                });
-              }
-            }, 50);
+              this.foundToken("wallpaper-chosen");
+            }, 500);
           }
         }
 
