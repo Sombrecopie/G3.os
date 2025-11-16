@@ -966,12 +966,17 @@
                 src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
                 style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
               />
-              tokens (<span id="token-count">0</span>/10)</label
+              tokens (<span id="token-count">0</span>/11)</label
             >
           </li>
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task4" /><label for="task4" class="todo-text"
-              >Win a Minesweeper game</label
+              >Find all <span id="total-tokens">11</span>
+              <img
+                src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
+                style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
+              />
+              tokens</label
             >
           </li>
           <li class="todo-item">
@@ -1067,9 +1072,6 @@
           }
           if (localStorage.getItem("task3-completed") === "true") {
             document.getElementById("task3").checked = true;
-          }
-          if (localStorage.getItem("minesweeper-won") === "true") {
-            document.getElementById("task4").checked = true;
           }
         }
 
@@ -1217,6 +1219,9 @@
           }
           if (this.tokensFound >= 10) {
             document.getElementById("task2").checked = true;
+          }
+          if (this.tokensFound >= 11) {
+            document.getElementById("task4").checked = true;
           }
           const clippy = document.getElementById("clippy");
           const clippyMessage = document.getElementById("clippy-message");
@@ -1841,6 +1846,11 @@
               this.unlockSnake();
             }, 1000);
           }
+          if (this.tokensFound >= 11) {
+            setTimeout(() => {
+              document.getElementById("task4").checked = true;
+            }, 1000);
+          }
         }
 
         unlockSnake() {
@@ -2075,6 +2085,7 @@
                 localStorage.setItem("task3-completed", "true");
                 const task3 = document.getElementById("task3");
                 if (task3) task3.checked = true;
+                this.foundToken("snake-victory");
                 if (gameLoop) clearInterval(gameLoop);
                 document.removeEventListener("keydown", keyHandler);
                 setTimeout(() => {
@@ -2744,7 +2755,14 @@
         <span class="secret-reveal" data-secret="10" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
         <span class="secret-answer" data-secret="10" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Volume Control → Success 70% on 30 tries</span>
       </div>
-      
+
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #11: "The Snake Champion"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Master the serpent's path and reach the ultimate score."</span><br>
+        <span class="secret-reveal" data-secret="11" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="11" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Collect 10 tokens → Play Snake → Reach score 30</span>
+      </div>
+
       <hr style="border: 1px solid #808080; margin: 12px 0;">
 
       <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #ff8800;">
@@ -2757,7 +2775,7 @@
       <hr style="border: 1px solid #808080; margin: 12px 0;">
       <div style="text-align: center; font-size: 9px; color: #666;">
         "The path is hidden, the rewards immense."<br>
-        "Ten fragments unlock what lies beyond."<br>
+        "Eleven fragments unlock what lies beyond."<br>
         <span style="color: #00ff88;">- Cipher Master, G3.OS Archives</span>
       </div>
     </div>
@@ -2976,7 +2994,6 @@
                 }
                 if (!localStorage.getItem("minesweeper-won")) {
                   localStorage.setItem("minesweeper-won", "true");
-                  document.getElementById("task4").checked = true;
                   setTimeout(() => {
                     this.foundToken("minesweeper-victory");
                   }, 500);
@@ -3149,7 +3166,7 @@
                 <h3>Find <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 16px; height: 16px; vertical-align: middle; image-rendering: pixelated;"> Tokens</h3>
               </div>
               <p style="margin-bottom: 12px;">Hidden <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated;"> tokens are scattered throughout G3.OS!</p>
-              <p style="margin-bottom: 12px;">Current progress: <strong>${this.tokensFound}/10</strong></p>
+              <p style="margin-bottom: 12px;">Current progress: <strong>${this.tokensFound}/11</strong></p>
               <div style="background: #ffffff; border: 2px solid #808080; border-style: inset; padding: 8px; margin: 12px 0;">
                 <p style="font-size: 10px; color: #666;">💡 Tip: Try exploring different menus and clicking on things...</p>
               </div>
