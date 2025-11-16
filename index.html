@@ -948,6 +948,7 @@
         <div class="start-menu-item" data-app="help"><span class="start-menu-item-icon">❓</span>Help</div>
         <div class="start-menu-item" data-app="run"><span class="start-menu-item-icon">💾</span>Run...</div>
         <div class="start-menu-separator"></div>
+        <div class="start-menu-item" data-app="restart"><span class="start-menu-item-icon">🔄</span>Restart Game...</div>
         <div class="start-menu-item" data-app="shutdown"><span class="start-menu-item-icon">⏻</span>Shut Down...</div>
       </div>
     </div>
@@ -1035,9 +1036,25 @@
           this.zIndex = 100;
           this.tokensFound = 0;
           this.clippyClicks = 0;
+          this.windowsClosed = 0;
           this.idleTimer = null;
           this.screensaverActive = false;
           this.minimizedWindowCount = 0;
+
+          // Secret tracking variables
+          this.clockClicks = 0;
+          this.clockClickTimer = null;
+          this.emptyWindowsTimer = null;
+          this.myComputerOpenCount = 0;
+          this.firstTokenTime = null;
+          this.paintDrawTime = 0;
+          this.paintDrawTimer = null;
+          this.secretsFileOpenCount = 0;
+          this.wallpaperChangeCount = 0;
+          this.dragCount = 0;
+          this.currentDragStartTime = null;
+          this.clickTimes = [];
+
           this.init();
         }
 
@@ -1050,6 +1067,7 @@
           this.loadSavedWallpaper();
           this.checkSnakeUnlock();
           this.setupScreensaver();
+          this.setupSecretDetection();
         }
 
         checkSnakeUnlock() {
@@ -1181,6 +1199,21 @@
             if (clockEl && !this._clockClickBound) {
               this._clockClickBound = true;
               clockEl.addEventListener("click", () => {
+                // Time Traveler secret - 3 clicks in 2 seconds
+                this.clockClicks++;
+                if (this.clockClickTimer) clearTimeout(this.clockClickTimer);
+                this.clockClickTimer = setTimeout(() => {
+                  this.clockClicks = 0;
+                }, 2000);
+
+                if (this.clockClicks === 3 && !localStorage.getItem("og-secret-time-traveler")) {
+                  this.foundSecret(
+                    "time-traveler",
+                    "The Time Traveler",
+                    "You've discovered the fourth dimension! Three clicks on time itself. In G3.OS, time is just a construct."
+                  );
+                }
+
                 if (this._clockClickCount < 0) return; // already triggered
                 this._clockClickCount++;
                 if (this._clockClickCount >= 10) {
@@ -1228,18 +1261,44 @@
             '"Almost there!"',
             '"One more time!"',
             '"You found my secret! 🎉"',
+            '"Still clicking?"',
+            '"I admire your persistence..."',
+            '"You\'re really dedicated!"',
+            '"Click #10! Halfway to something..."',
+            '"Going for the record?"',
+            '"My creator didn\'t expect this..."',
+            '"You must really like me!"',
+            '"Click #15! Almost there..."',
+            '"The truth is near..."',
+            '"Just a few more..."',
+            '"So close now..."',
+            '"One more, I promise!"',
+            '"🎊 THE CLIPPY CONSPIRACY UNLOCKED! 🎊"',
           ];
           clippy.addEventListener("click", () => {
             this.clippyClicks++;
-            if (this.clippyClicks < messages.length - 1) {
+            if (this.clippyClicks < 6) {
               clippyMessage.textContent = messages[this.clippyClicks];
               clippy.style.animation = "none";
               setTimeout(() => {
                 clippy.style.animation = "clippy-bounce 0.5s ease-in-out";
               }, 10);
-            } else if (this.clippyClicks === messages.length - 1) {
-              clippyMessage.textContent = messages[messages.length - 1];
+            } else if (this.clippyClicks === 6) {
+              clippyMessage.textContent = messages[6];
               this.foundToken("clippy-secret");
+            } else if (this.clippyClicks < 20) {
+              clippyMessage.textContent = messages[this.clippyClicks];
+              clippy.style.animation = "none";
+              setTimeout(() => {
+                clippy.style.animation = "clippy-bounce 0.5s ease-in-out";
+              }, 10);
+            } else if (this.clippyClicks === 20) {
+              clippyMessage.textContent = messages[19];
+              this.foundSecret(
+                "clippy-conspiracy",
+                "The Clippy Conspiracy",
+                "You discovered Clippy's deepest secret! Your persistence has uncovered the truth: Clippy was never annoying... you were just never patient enough to listen."
+              );
             }
           });
           let isDragging = false;
@@ -1258,6 +1317,19 @@
             stickyNote.style.right = "auto";
           });
           document.addEventListener("mouseup", () => {
+            if (isDragging) {
+              // The Drag Queen - Drag sticky note 20 times
+              this.dragCount++;
+              if (this.dragCount === 20 && !localStorage.getItem("og-secret-drag-queen")) {
+                setTimeout(() => {
+                  this.foundSecret(
+                    "drag-queen",
+                    "The Drag Queen",
+                    "Twenty drags of the sticky note! Still searching for the perfect spot? Feng shui: desktop edition. The vibes are immaculate now."
+                  );
+                }, 500);
+              }
+            }
             isDragging = false;
           });
         }
@@ -1321,6 +1393,9 @@
           switch (item) {
             case "shutdown":
               this.showShutdownDialog();
+              break;
+            case "restart":
+              this.showRestartDialog();
               break;
             case "run":
               this.showRunDialog();
@@ -1491,6 +1566,23 @@
           windowElement.addEventListener("mousedown", () => {
             this.setActiveWindow(windowId);
           });
+
+          // The Maximalist - 10 windows open
+          if (this.windows.size >= 10 && !localStorage.getItem("og-secret-maximalist")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "maximalist",
+                "The Maximalist",
+                "Ten windows open simultaneously. Your desktop is chaos incarnate. Beautiful, productive chaos."
+              );
+            }, 500);
+          }
+
+          // Clear Minimalist timer if windows are opened
+          if (this.emptyWindowsTimer) {
+            clearTimeout(this.emptyWindowsTimer);
+            this.emptyWindowsTimer = null;
+          }
         }
 
         setActiveWindow(windowId) {
@@ -1518,6 +1610,32 @@
             data.element.remove();
             data.taskButton.remove();
             this.windows.delete(windowId);
+
+            // Track closed windows for "The Closer" secret
+            this.windowsClosed++;
+            if (this.windowsClosed === 20) {
+              setTimeout(() => {
+                this.foundSecret(
+                  "the-closer",
+                  "The Closer",
+                  "You've closed 20 windows! Some say you're organized. Others say you're running from commitment. Either way, you're a master of closure."
+                );
+              }, 300);
+            }
+
+            // The Minimalist - 0 windows for 10 seconds
+            if (this.windows.size === 0 && !localStorage.getItem("og-secret-minimalist")) {
+              if (this.emptyWindowsTimer) clearTimeout(this.emptyWindowsTimer);
+              this.emptyWindowsTimer = setTimeout(() => {
+                if (this.windows.size === 0) {
+                  this.foundSecret(
+                    "minimalist",
+                    "The Minimalist",
+                    "Ten seconds of pure emptiness. Zen mode achieved. In the void, you found enlightenment."
+                  );
+                }
+              }, 10000);
+            }
           }
         }
 
@@ -1555,22 +1673,27 @@
           if (!data) return;
           const windowElement = data.element;
           if (data.isMaximized) {
+            // Restore original size
             windowElement.style.width = data.originalSize.width + "px";
             windowElement.style.height = data.originalSize.height + "px";
             windowElement.style.left = data.originalSize.x + "px";
             windowElement.style.top = data.originalSize.y + "px";
+            windowElement.classList.remove("maximized");
             data.isMaximized = false;
           } else {
+            // Save original size
             data.originalSize = {
               width: windowElement.offsetWidth,
               height: windowElement.offsetHeight,
               x: windowElement.offsetLeft,
               y: windowElement.offsetTop,
             };
-            windowElement.style.width = window.innerWidth - 4 + "px";
-            windowElement.style.height = window.innerHeight - 32 + "px";
-            windowElement.style.left = "0px";
-            windowElement.style.top = "0px";
+            // Maximize to full screen (accounting for taskbar = 40px)
+            windowElement.style.width = "calc(100vw - 4px)";
+            windowElement.style.height = "calc(100vh - 44px)";
+            windowElement.style.left = "0";
+            windowElement.style.top = "0";
+            windowElement.classList.add("maximized");
             data.isMaximized = true;
           }
         }
@@ -1807,6 +1930,22 @@
           if (counter) {
             counter.textContent = this.tokensFound;
           }
+
+          // The Speedrunner - 3 tokens in 60 seconds
+          const now = Date.now();
+          if (!this.firstTokenTime) {
+            this.firstTokenTime = now;
+          }
+          const elapsedSeconds = (now - this.firstTokenTime) / 1000;
+          if (this.tokensFound === 3 && elapsedSeconds <= 60 && !localStorage.getItem("og-secret-speedrunner")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "speedrunner",
+                "The Speedrunner",
+                "Three tokens in under 60 seconds?! SPEEDRUN MODE ACTIVATED! You're not playing G3.OS, you're breaking it."
+              );
+            }, 1000);
+          }
           const content = `
             <div style="padding: 16px; text-align: center;">
               <div style="margin-bottom: 10px;">
@@ -1845,6 +1984,123 @@
               document.getElementById("task2").checked = true;
             }, 1000);
           }
+        }
+
+        playDingSound() {
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+          } catch (e) {
+            console.warn("Could not play ding sound", e);
+          }
+        }
+
+        foundSecret(secretId, secretName, description) {
+          const storageKey = "og-secret-" + secretId;
+          if (localStorage.getItem(storageKey)) {
+            return;
+          }
+          localStorage.setItem(storageKey, "true");
+
+          // Play ding sound
+          this.playDingSound();
+
+          const content = `
+            <div style="padding: 20px; text-align: center;">
+              <div style="font-size: 64px; margin-bottom: 16px;">🔍</div>
+              <h2 style="color: #ff6600; margin-bottom: 12px;">${secretName}</h2>
+              <p style="margin-bottom: 16px;">${description}</p>
+              <p style="color: #666; font-size: 11px; margin-bottom: 20px;">
+                (This secret does not count as a token)
+              </p>
+              <button class="win95 close-window-btn">OK</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "🔍 Secret Discovered!",
+            content,
+            width: 400,
+            height: 280,
+            x: window.innerWidth / 2 - 200,
+            y: window.innerHeight / 2 - 140,
+          });
+          setTimeout(() => {
+            const btn = win.querySelector(".close-window-btn");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 50);
+        }
+
+        setupSecretDetection() {
+          // F5 Addict - Detect page reloads
+          const pageLoadCount = parseInt(localStorage.getItem("og-page-loads") || "0") + 1;
+          localStorage.setItem("og-page-loads", pageLoadCount.toString());
+          if (pageLoadCount === 5 && !localStorage.getItem("og-secret-f5-addict")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "f5-addict",
+                "The F5 Addict",
+                "Five page reloads detected. Commitment issues? Or just testing? Either way, you're persistent!"
+              );
+            }, 2000);
+          }
+
+          // Night Owl - Check if playing between midnight and 5am
+          const hour = new Date().getHours();
+          if (hour >= 0 && hour < 5) {
+            setTimeout(() => {
+              this.foundSecret(
+                "night-owl",
+                "The Night Owl",
+                "It's past midnight and you're exploring a retro OS. The best code is written at 3 AM, they say. Welcome, fellow night dweller."
+              );
+            }, 3000);
+          }
+
+          // Spam Clicker - Detect 50 clicks in 5 seconds
+          document.addEventListener("click", (e) => {
+            const now = Date.now();
+            this.clickTimes.push(now);
+            this.clickTimes = this.clickTimes.filter(t => now - t < 5000);
+
+            if (this.clickTimes.length >= 50 && !localStorage.getItem("og-secret-spam-clicker")) {
+              this.foundSecret(
+                "spam-clicker",
+                "The Spam Clicker",
+                "50 clicks in 5 seconds?! CLICK CLICK CLICK CLICK. Calm down, the UI can't handle this energy!"
+              );
+            }
+          });
+
+          // Inspector - Detect DevTools
+          const checkDevTools = () => {
+            if ((window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160)) {
+              if (!localStorage.getItem("og-secret-inspector")) {
+                this.foundSecret(
+                  "inspector",
+                  "The Inspector",
+                  "Looking under the hood? DevTools detected. Respect the curiosity. Hack the planet!"
+                );
+              }
+            }
+          };
+          setInterval(checkDevTools, 1000);
         }
 
         unlockSnake() {
@@ -2208,6 +2464,18 @@
         }
 
         openExplorer() {
+          // The Double Agent - Open My Computer 2x
+          this.myComputerOpenCount++;
+          if (this.myComputerOpenCount === 2 && !localStorage.getItem("og-secret-double-agent")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "double-agent",
+                "The Double Agent",
+                "Inception detected. You've opened a window within Windows 95... within a browser. Reality is layered."
+              );
+            }, 500);
+          }
+
           const content = `
             <div style="display: flex; height: 100%;">
               <div style="width: 150px; border-right: 1px solid #808080; padding: 8px; overflow-y: auto;">
@@ -2368,6 +2636,18 @@
         }
 
         setWallpaper(url, id) {
+          // The Wallpaper Addict - Change wallpaper 5 times
+          this.wallpaperChangeCount++;
+          if (this.wallpaperChangeCount === 5 && !localStorage.getItem("og-secret-wallpaper-addict")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "wallpaper-addict",
+                "The Wallpaper Addict",
+                "Fifth wallpaper change! Interior design is your passion. Can't decide? Why not change it again in 5 minutes?"
+              );
+            }, 800);
+          }
+
           const desktop = document.getElementById("desktop");
           desktop.style.backgroundImage = `url('${url}')`;
           desktop.style.backgroundSize = "cover";
@@ -2474,6 +2754,12 @@
                 name: "token_TOKEN.dat",
                 isToken: true,
               });
+            } else if (i === 99) {
+              trashFiles.push({
+                icon: '🔍',
+                name: "DO_NOT_DELETE.exe",
+                isSecret: true,
+              });
             } else {
               trashFiles.push({
                 icon: fileType.icon,
@@ -2485,9 +2771,9 @@
           const trashHTML = trashFiles
             .map(
               (file, index) => `
-            <div style="display: inline-block; width: 80px; text-align: center; padding: 8px; margin: 4px; cursor: ${file.isToken ? "pointer" : "default"}; vertical-align: top;" class="${file.isToken ? "trash-token" : ""}" data-index="${index}">
+            <div style="display: inline-block; width: 80px; text-align: center; padding: 8px; margin: 4px; cursor: ${file.isToken || file.isSecret ? "pointer" : "default"}; vertical-align: top;" class="${file.isToken ? "trash-token" : ""} ${file.isSecret ? "trash-secret" : ""}" data-index="${index}">
               <div style="font-size: 32px; margin-bottom: 4px;">${file.icon}</div>
-              <div style="font-size: 9px; word-wrap: break-word; color: ${file.isToken ? "#00ff88" : "#000000"}; font-weight: ${file.isToken ? "bold" : "normal"};">${file.name}</div>
+              <div style="font-size: 9px; word-wrap: break-word; color: ${file.isToken ? "#00ff88" : file.isSecret ? "#ff6600" : "#000000"}; font-weight: ${file.isToken || file.isSecret ? "bold" : "normal"};">${file.name}</div>
             </div>
           `,
             )
@@ -2520,6 +2806,16 @@
             if (tokenItem) {
               tokenItem.addEventListener("click", () => {
                 this.foundToken("recycle-bin-token");
+              });
+            }
+            const secretItem = win.querySelector(".trash-secret");
+            if (secretItem) {
+              secretItem.addEventListener("click", () => {
+                this.foundSecret(
+                  "the-janitor",
+                  "The Janitor",
+                  "You discovered the system janitor's forbidden file! Legend says this executable has been deleted 1000 times, yet it always returns. It contains the secrets of what really happens when you empty the Recycle Bin."
+                );
               });
             }
           }, 100);
@@ -2590,16 +2886,32 @@
           }
           canvas.addEventListener("mousedown", (e) => {
             isDrawing = true;
+            this.currentDragStartTime = Date.now();
             draw(e);
           });
           canvas.addEventListener("mousemove", (e) => {
             if (isDrawing) draw(e);
           });
           canvas.addEventListener("mouseup", () => {
+            if (isDrawing && this.currentDragStartTime) {
+              const drawDuration = (Date.now() - this.currentDragStartTime) / 1000;
+              this.paintDrawTime += drawDuration;
+              if (this.paintDrawTime >= 30 && !localStorage.getItem("og-secret-painter")) {
+                this.foundSecret(
+                  "painter",
+                  "The Painter",
+                  "Thirty seconds of pure artistic expression. Art takes time, and you've created something... unique."
+                );
+              }
+            }
             isDrawing = false;
             ctx.beginPath();
           });
           canvas.addEventListener("mouseleave", () => {
+            if (isDrawing && this.currentDragStartTime) {
+              const drawDuration = (Date.now() - this.currentDragStartTime) / 1000;
+              this.paintDrawTime += drawDuration;
+            }
             isDrawing = false;
             ctx.beginPath();
           });
@@ -2639,9 +2951,9 @@
                   <div style="font-size: 32px;">📁</div>
                   <div style="font-size: 10px;">old_files</div>
                 </div>
-                <div style="text-align: center; cursor: pointer;" class="paint-file">
-                  <div style="font-size: 32px;">🎨</div>
-                  <div style="font-size: 10px;">paint.exe</div>
+                <div style="text-align: center; cursor: pointer;" class="achievements-file">
+                  <div style="font-size: 32px;">🏆</div>
+                  <div style="font-size: 10px;">achievements.exe</div>
                 </div>
               </div>
             </div>
@@ -2663,16 +2975,295 @@
                 this.openSecretsFile();
               });
             }
-            const paintFile = win.querySelector(".paint-file");
-            if (paintFile) {
-              paintFile.addEventListener("dblclick", () => {
-                this.openPaint();
+            const achievementsFile = win.querySelector(".achievements-file");
+            if (achievementsFile) {
+              achievementsFile.addEventListener("dblclick", () => {
+                this.openAchievements();
               });
             }
           }, 100);
         }
 
+        getAchievementsData() {
+          return [
+            // BEHAVIORAL SECRETS
+            {
+              id: "time-traveler",
+              name: "The Time Traveler",
+              emoji: "🕐",
+              category: "BEHAVIORAL",
+              description: "Clicked time itself",
+              detail: "3x in 2 seconds",
+              hint: "Three strikes upon the clock within two heartbeats. Time bends for those who dare to click its face."
+            },
+            {
+              id: "minimalist",
+              name: "The Minimalist",
+              emoji: "🧘",
+              category: "BEHAVIORAL",
+              description: "Achieved zen mode",
+              detail: "0 windows for 10 seconds",
+              hint: "In the void, enlightenment awaits. Ten seconds of absolute emptiness. No windows, no distractions."
+            },
+            {
+              id: "maximalist",
+              name: "The Maximalist",
+              emoji: "📚",
+              category: "BEHAVIORAL",
+              description: "Chaos incarnate",
+              detail: "10 windows open simultaneously",
+              hint: "Ten worlds open simultaneously. Chaos incarnate. Your desktop bleeds with productivity."
+            },
+            {
+              id: "night-owl",
+              name: "The Night Owl",
+              emoji: "🦉",
+              category: "BEHAVIORAL",
+              description: "3 AM coder detected",
+              detail: "Played between midnight-5am",
+              hint: "The hour between midnight and dawn. When normal souls sleep, explorers boot up G3.OS."
+            },
+            {
+              id: "drag-queen",
+              name: "The Drag Queen",
+              emoji: "👑",
+              category: "BEHAVIORAL",
+              description: "Feng shui master",
+              detail: "Dragged sticky note 20x",
+              hint: "Twenty journeys across the desktop. The sticky note seeks its perfect position. Help it find peace."
+            },
+            {
+              id: "spam-clicker",
+              name: "The Spam Clicker",
+              emoji: "💥",
+              category: "BEHAVIORAL",
+              description: "CLICK CLICK CLICK",
+              detail: "50 clicks in 5 seconds",
+              hint: "Fifty clicks in five heartbeats. CLICK CLICK CLICK. The UI trembles at your energy."
+            },
+
+            // EXPLORATION SECRETS
+            {
+              id: "double-agent",
+              name: "The Double Agent",
+              emoji: "🕵️",
+              category: "EXPLORATION",
+              description: "Inception detected",
+              detail: "Opened My Computer twice",
+              hint: "Inception within Windows within browser. Open the computer twice. Reality layers upon itself."
+            },
+            {
+              id: "archaeologist",
+              name: "The Archaeologist",
+              emoji: "🏺",
+              category: "EXPLORATION",
+              description: "Archive obsession",
+              detail: "Opened secrets.txt 5 times",
+              hint: "Five pilgrimages to the sacred archives. The seeker reads secrets.txt again and again. Obsession rewarded."
+            },
+            {
+              id: "the-janitor",
+              name: "The Janitor",
+              emoji: "🗑️",
+              category: "EXPLORATION",
+              description: "Found the forbidden file",
+              detail: "Item 100 in Recycle Bin",
+              hint: "In the Recycle Bin's depths, past the seventy-fifth treasure, lies a file that refuses to die. Seek the hundredth item."
+            },
+            {
+              id: "the-closer",
+              name: "The Closer",
+              emoji: "📁",
+              category: "EXPLORATION",
+              description: "Master of closure",
+              detail: "Closed 20 windows",
+              hint: "Twenty windows closed, a pattern revealed. Are you organized, or running from commitment?"
+            },
+            {
+              id: "wallpaper-addict",
+              name: "The Wallpaper Addict",
+              emoji: "🖼️",
+              category: "EXPLORATION",
+              description: "Interior design passion",
+              detail: "Changed wallpaper 5 times",
+              hint: "Five transformations of the canvas. Interior design is passion. Change it once, change it forever."
+            },
+
+            // SKILL SECRETS
+            {
+              id: "speedrunner",
+              name: "The Speedrunner",
+              emoji: "⚡",
+              category: "SKILL",
+              description: "SPEEDRUN MODE",
+              detail: "3 tokens in 60 seconds",
+              hint: "Three tokens in sixty ticks of time. Speed meets skill. No hesitation, only execution."
+            },
+            {
+              id: "painter",
+              name: "The Painter",
+              emoji: "🎨",
+              category: "SKILL",
+              description: "Artistic dedication",
+              detail: "Drew for 30 seconds",
+              hint: "Thirty seconds of continuous artistic flow. The canvas knows when true dedication touches its surface."
+            },
+            {
+              id: "clippy-conspiracy",
+              name: "The Clippy Conspiracy",
+              emoji: "📎",
+              category: "SKILL",
+              description: "Clippy's deepest secret",
+              detail: "Clicked Clippy 20 times",
+              hint: "The assistant knows more than he lets on. Persistence beyond the sixth revelation shall unveil the truth."
+            },
+
+            // META SECRETS
+            {
+              id: "matrix",
+              name: "The Matrix",
+              emoji: "💚",
+              category: "META",
+              description: "Wake up, Neo...",
+              detail: "Typed 'matrix' in Run",
+              hint: "Type the name of reality where commands dwell. Green rain falls. Neo awaits. The truth is a six-letter word."
+            },
+            {
+              id: "inspector",
+              name: "The Inspector",
+              emoji: "🔍",
+              category: "META",
+              description: "Hacker mode activated",
+              detail: "Opened DevTools (F12)",
+              hint: "Pull back the curtain. Peek behind the simulation. Press F12 or right-click inspect. The code sees all."
+            },
+            {
+              id: "f5-addict",
+              name: "The F5 Addict",
+              emoji: "🔄",
+              category: "META",
+              description: "Commitment issues detected",
+              detail: "Reloaded page 5 times",
+              hint: "Five resurrections of the page. Commitment issues detected. Refresh, restart, reload. Persevere."
+            },
+            {
+              id: "incantation",
+              name: "The Incantation",
+              emoji: "🎮",
+              category: "META",
+              description: "True GAM3R",
+              detail: "Typed 'gam3s' in Run",
+              hint: "Speak our true name where commands are born. Binary whispers: 01100111 01100001 01101101 00110011 01110011"
+            }
+          ];
+        }
+
+        openAchievements() {
+          const achievements = this.getAchievementsData();
+
+          // Count unlocked achievements
+          let unlockedCount = 0;
+          achievements.forEach(ach => {
+            if (localStorage.getItem(`og-secret-${ach.id}`)) {
+              unlockedCount++;
+            }
+          });
+
+          const totalCount = achievements.length;
+          const percentage = Math.round((unlockedCount / totalCount) * 100);
+
+          // Group by category
+          const categories = {
+            "BEHAVIORAL": [],
+            "EXPLORATION": [],
+            "SKILL": [],
+            "META": []
+          };
+
+          achievements.forEach(ach => {
+            const unlocked = localStorage.getItem(`og-secret-${ach.id}`) !== null;
+            categories[ach.category].push({ ...ach, unlocked });
+          });
+
+          // Build HTML
+          let html = `
+            <div style="padding: 16px; font-family: 'MS Sans Serif', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; height: 100%; overflow-y: auto;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h1 style="color: #00ff88; font-size: 24px; margin: 0 0 8px 0; text-shadow: 0 0 10px #00ff88;">🏆 ACHIEVEMENTS 🏆</h1>
+                <div style="background: rgba(0,255,136,0.1); border: 2px solid #00ff88; padding: 8px; border-radius: 4px; display: inline-block;">
+                  <span style="font-size: 16px; font-weight: bold; color: #00ff88;">${unlockedCount}/${totalCount}</span>
+                  <span style="color: #888; font-size: 12px; margin-left: 8px;">(${percentage}%)</span>
+                </div>
+              </div>
+          `;
+
+          // Render each category
+          Object.keys(categories).forEach(categoryName => {
+            html += `
+              <div style="margin-bottom: 20px;">
+                <div style="color: #00ff88; font-size: 11px; font-weight: bold; margin-bottom: 12px; letter-spacing: 1px;">━━━ ${categoryName} SECRETS ━━━</div>
+            `;
+
+            categories[categoryName].forEach(ach => {
+              const bgColor = ach.unlocked ? "rgba(0,255,136,0.1)" : "rgba(128,128,128,0.1)";
+              const borderColor = ach.unlocked ? "#00ff88" : "#555";
+              const textColor = ach.unlocked ? "#fff" : "#888";
+              const statusIcon = ach.unlocked ? "✅" : "🔒";
+              const statusText = ach.unlocked ? "UNLOCKED!" : "LOCKED";
+              const statusColor = ach.unlocked ? "#00ff88" : "#ff6600";
+
+              html += `
+                <div style="background: ${bgColor}; border: 2px solid ${borderColor}; border-radius: 4px; padding: 12px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center;">
+                  <div style="background: rgba(0,0,0,0.3); border-radius: 4px; width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <div style="font-size: 28px;">${ach.emoji}</div>
+                    <div style="font-size: 16px; margin-top: 4px;">${statusIcon}</div>
+                  </div>
+                  <div style="flex: 1; color: ${textColor};">
+                    <div style="font-weight: bold; font-size: 13px; margin-bottom: 4px;">${ach.name}</div>
+                    <div style="font-size: 11px; opacity: 0.9;">
+                      ${ach.unlocked ? ach.description : "???"}
+                    </div>
+                    <div style="font-size: 10px; margin-top: 4px; opacity: 0.7;">
+                      ${ach.unlocked ? ach.detail : ach.hint}
+                    </div>
+                    <div style="color: ${statusColor}; font-size: 10px; font-weight: bold; margin-top: 6px;">
+                      ${statusText}
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+
+            html += `</div>`;
+          });
+
+          html += `
+            </div>
+          `;
+
+          const win = this.createWindow({
+            title: "🏆 Achievements - G3.OS Edition",
+            content: html,
+            width: 500,
+            height: 500,
+            x: window.innerWidth / 2 - 250,
+            y: window.innerHeight / 2 - 250,
+          });
+        }
+
         openSecretsFile() {
+          // The Archaeologist - Open secrets.txt 5 times
+          this.secretsFileOpenCount++;
+          if (this.secretsFileOpenCount === 5 && !localStorage.getItem("og-secret-archaeologist")) {
+            setTimeout(() => {
+              this.foundSecret(
+                "archaeologist",
+                "The Archaeologist",
+                "Five visits to the archives. Still searching for clues? The real treasure was the obsession we developed along the way."
+              );
+            }, 500);
+          }
+
           const content = `
     <div style="padding: 12px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6;">
       <div style="text-align: center; margin-bottom: 12px; font-weight: bold; color: #00ff88;">=== G3.OS SECRET ARCHIVES ===</div>
@@ -2759,11 +3350,83 @@
 
       <hr style="border: 1px solid #808080; margin: 12px 0;">
 
-      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #ff8800;">
-        <strong>EASTER EGG (Non-Token Secret):</strong><br>
-        <span style="color: #888; font-size: 10px;">• "The Incantation" - Speak our true name where commands are born.</span><br>
-        <span style="color: #888; font-size: 10px;">  Binary whispers: 01100111 01100001 01101101 00110011 01110011</span><br>
-        <span style="color: #666; font-size: 9px; font-style: italic;">  (This unlocks a secret, but does not award a token)</span>
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #ff6600;">
+        <strong>HIDDEN SECRETS (Non-Token Discoveries):</strong><br>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Incantation" - Speak our true name where commands are born.</span><br>
+          <span style="color: #888; font-size: 10px;">  Binary whispers: 01100111 01100001 01101101 00110011 01110011</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Time Traveler" - Three strikes upon the clock within two heartbeats.</span><br>
+          <span style="color: #888; font-size: 10px;">  Time bends for those who dare to click its face.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Minimalist" - In the void, enlightenment awaits.</span><br>
+          <span style="color: #888; font-size: 10px;">  Ten seconds of absolute emptiness. No windows, no distractions.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Maximalist" - Ten worlds open simultaneously.</span><br>
+          <span style="color: #888; font-size: 10px;">  Chaos incarnate. Your desktop bleeds with productivity.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Night Owl" - The hour between midnight and dawn.</span><br>
+          <span style="color: #888; font-size: 10px;">  When normal souls sleep, explorers boot up G3.OS.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Double Agent" - Inception within Windows within browser.</span><br>
+          <span style="color: #888; font-size: 10px;">  Open the computer twice. Reality layers upon itself.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Speedrunner" - Three tokens in sixty ticks of time.</span><br>
+          <span style="color: #888; font-size: 10px;">  Speed meets skill. No hesitation, only execution.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Painter" - Thirty seconds of continuous artistic flow.</span><br>
+          <span style="color: #888; font-size: 10px;">  The canvas knows when true dedication touches its surface.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Archaeologist" - Five pilgrimages to the sacred archives.</span><br>
+          <span style="color: #888; font-size: 10px;">  The seeker reads secrets.txt again and again. Obsession rewarded.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Wallpaper Addict" - Five transformations of the canvas.</span><br>
+          <span style="color: #888; font-size: 10px;">  Interior design is passion. Change it once, change it forever.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Matrix" - Type the name of reality where commands dwell.</span><br>
+          <span style="color: #888; font-size: 10px;">  Green rain falls. Neo awaits. The truth is a six-letter word.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Inspector" - Pull back the curtain. Peek behind the simulation.</span><br>
+          <span style="color: #888; font-size: 10px;">  Press F12 or right-click inspect. The code sees all.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The F5 Addict" - Five resurrections of the page.</span><br>
+          <span style="color: #888; font-size: 10px;">  Commitment issues detected. Refresh, restart, reload. Persevere.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Clippy Conspiracy" - The assistant knows more than he lets on.</span><br>
+          <span style="color: #888; font-size: 10px;">  Persistence beyond the sixth revelation shall unveil the truth.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Closer" - Twenty windows closed, a pattern revealed.</span><br>
+          <span style="color: #888; font-size: 10px;">  Are you organized, or running from commitment?</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Janitor" - In the Recycle Bin's depths, past the seventy-fifth treasure,</span><br>
+          <span style="color: #888; font-size: 10px;">  lies a file that refuses to die. Seek the hundredth item.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Drag Queen" - Twenty journeys across the desktop.</span><br>
+          <span style="color: #888; font-size: 10px;">  The sticky note seeks its perfect position. Help it find peace.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #888; font-size: 10px;">• "The Spam Clicker" - Fifty clicks in five heartbeats.</span><br>
+          <span style="color: #888; font-size: 10px;">  CLICK CLICK CLICK. The UI trembles at your energy.</span><br>
+        </div>
+        <div style="margin-top: 8px;">
+          <span style="color: #666; font-size: 9px; font-style: italic;">  (These unlock secrets, but do not award tokens)</span>
+        </div>
       </div>
 
       <hr style="border: 1px solid #808080; margin: 12px 0;">
@@ -3074,6 +3737,14 @@
                 if (command === "gam3s") {
                   this.showAchievement();
                   this.closeWindow(win.id);
+                } else if (command === "matrix") {
+                  this.foundSecret(
+                    "matrix",
+                    "The Matrix",
+                    "Wake up, Neo... The Matrix has you. Follow the white rabbit. Reality is an illusion. G3.OS is the truth."
+                  );
+                  this.closeWindow(win.id);
+                  setTimeout(() => this.showMatrixEffect(), 500);
                 }
               });
             }
@@ -3115,6 +3786,107 @@
               });
             }
           }, 50);
+        }
+
+        showMatrixEffect() {
+          // Create matrix rain effect overlay
+          const overlay = document.createElement("div");
+          overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 999999;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+          `;
+          document.body.appendChild(overlay);
+
+          const canvas = document.createElement("canvas");
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          canvas.style.cssText = "position: absolute; top: 0; left: 0;";
+          overlay.appendChild(canvas);
+
+          const ctx = canvas.getContext("2d");
+          const chars = "01ГƎ∀MƎS".split("");
+          const fontSize = 14;
+          const columns = canvas.width / fontSize;
+          const drops = Array(Math.floor(columns)).fill(1);
+
+          setTimeout(() => { overlay.style.opacity = "0.9"; }, 10);
+
+          const draw = () => {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0f0";
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+              const text = chars[Math.floor(Math.random() * chars.length)];
+              ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+              if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+              }
+              drops[i]++;
+            }
+          };
+
+          const interval = setInterval(draw, 33);
+
+          setTimeout(() => {
+            clearInterval(interval);
+            overlay.style.opacity = "0";
+            setTimeout(() => overlay.remove(), 500);
+          }, 3000);
+        }
+
+        showRestartDialog() {
+          const content = `
+            <div style="padding: 20px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+              <h3 style="margin-bottom: 16px;">Restart Game</h3>
+              <p style="margin-bottom: 16px; font-size: 12px;">This will reset all your progress:</p>
+              <div style="background: rgba(255,102,0,0.1); border: 2px solid #ff6600; padding: 12px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
+                <ul style="font-size: 11px; margin: 0; padding-left: 20px;">
+                  <li>All tokens will be lost</li>
+                  <li>All achievements will be locked</li>
+                  <li>Game progress will be reset</li>
+                </ul>
+              </div>
+              <p style="margin-bottom: 20px; font-weight: bold; color: #ff6600;">Are you sure?</p>
+              <button class="win95" id="restart-confirm-btn" style="background: #ff6600; color: white; font-weight: bold; margin-right: 8px;">Yes, Restart</button>
+              <button class="win95" id="restart-cancel-btn">Cancel</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "⚠️ Restart Game",
+            content,
+            width: 350,
+            height: 320,
+            x: window.innerWidth / 2 - 175,
+            y: window.innerHeight / 2 - 160,
+          });
+          setTimeout(() => {
+            const confirmBtn = document.getElementById("restart-confirm-btn");
+            const cancelBtn = document.getElementById("restart-cancel-btn");
+            if (confirmBtn) {
+              confirmBtn.addEventListener("click", () => {
+                // Clear ALL localStorage
+                localStorage.clear();
+                // Reload the page
+                location.reload();
+              });
+            }
+            if (cancelBtn) {
+              cancelBtn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 100);
         }
 
         showShutdownDialog() {
