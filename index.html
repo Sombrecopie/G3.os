@@ -961,12 +961,12 @@
         <ul class="todo-list">
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task2" /><label for="task2" class="todo-text"
-              >Find 7
+              >Find 10
               <img
                 src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
                 style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
               />
-              tokens (<span id="token-count">0</span>/7)</label
+              tokens (<span id="token-count">0</span>/10)</label
             >
           </li>
           <li class="todo-item">
@@ -976,7 +976,7 @@
           </li>
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task1" /><label for="task1" class="todo-text"
-              >Find token</label
+              >Success 70% score on 30 tries on reflex game</label
             >
           </li>
           <li class="todo-item" id="task3-container">
@@ -1215,7 +1215,7 @@
           if (counter) {
             counter.textContent = this.tokensFound;
           }
-          if (this.tokensFound >= 7) {
+          if (this.tokensFound >= 10) {
             document.getElementById("task2").checked = true;
           }
           const clippy = document.getElementById("clippy");
@@ -1835,7 +1835,7 @@
               });
             }
           }, 50);
-          if (this.tokensFound >= 7) {
+          if (this.tokensFound >= 10) {
             setTimeout(() => {
               document.getElementById("task2").checked = true;
               this.unlockSnake();
