@@ -961,7 +961,7 @@
         <ul class="todo-list">
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task1" /><label for="task1" class="todo-text"
-              >Choose a wallpaper</label
+              >Avoir un score d'au moins 70% sur /30 sur le jeu de réflexe</label
             >
           </li>
           <li class="todo-item">
@@ -1061,6 +1061,9 @@
               gameName.style.color = "#00ff88";
               gameName.style.fontWeight = "bold";
             }
+          }
+          if (localStorage.getItem("task1-completed") === "true") {
+            document.getElementById("task1").checked = true;
           }
           if (localStorage.getItem("task3-completed") === "true") {
             document.getElementById("task3").checked = true;
@@ -3541,6 +3544,20 @@
   function updateScore() {
     const percentage = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
     scoreDisplay.textContent = `Score: ${score} / ${attempts} (${percentage}%)`;
+
+    // Vérifier si l'objectif est atteint : 70% ou plus sur 30 tentatives
+    if (attempts >= 30 && percentage >= 70 && localStorage.getItem('task1-completed') !== 'true') {
+      localStorage.setItem('task1-completed', 'true');
+      document.getElementById('task1').checked = true;
+
+      // Message de félicitations
+      setTimeout(() => {
+        messageDisplay.textContent = '🎉 Objectif atteint ! Bravo !';
+        messageDisplay.className = 'game-message success';
+        messageDisplay.style.fontSize = '14px';
+        messageDisplay.style.fontWeight = 'bold';
+      }, 600);
+    }
   }
 
   // Réinitialiser le jeu
