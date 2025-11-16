@@ -965,18 +965,18 @@
             >
           </li>
           <li class="todo-item">
+            <input type="checkbox" class="win95 todo-checkbox" id="task4" /><label for="task4" class="todo-text"
+              >Win a Minesweeper game</label
+            >
+          </li>
+          <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task2" /><label for="task2" class="todo-text"
-              >Find 6
+              >Find 10
               <img
                 src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
                 style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
               />
-              tokens (<span id="token-count">0</span>/6)</label
-            >
-          </li>
-          <li class="todo-item">
-            <input type="checkbox" class="win95 todo-checkbox" id="task4" /><label for="task4" class="todo-text"
-              >Win a Minesweeper game</label
+              tokens (<span id="token-count">0</span>/10)</label
             >
           </li>
           <li class="todo-item" id="task3-container">
@@ -1215,7 +1215,7 @@
           if (counter) {
             counter.textContent = this.tokensFound;
           }
-          if (this.tokensFound >= 6) {
+          if (this.tokensFound >= 10) {
             document.getElementById("task2").checked = true;
           }
           const clippy = document.getElementById("clippy");
@@ -1814,7 +1814,7 @@
               </div>
               <h3 style="color: #00ff88; margin-bottom: 8px;"><img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 20px; height: 20px; vertical-align: middle; image-rendering: pixelated;"> Token Found!</h3>
               <p>You found a hidden token!</p>
-              <p style="margin-top: 8px;"><strong>${this.tokensFound}/6</strong> tokens collected</p>
+              <p style="margin-top: 8px;"><strong>${this.tokensFound}/10</strong> tokens collected</p>
               <br>
               <button class="win95 close-window-btn">OK</button>
             </div>
@@ -1835,7 +1835,7 @@
               });
             }
           }, 50);
-          if (this.tokensFound >= 6) {
+          if (this.tokensFound >= 10) {
             setTimeout(() => {
               document.getElementById("task2").checked = true;
               this.unlockSnake();
@@ -3123,7 +3123,7 @@
                 <h3>Find <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 16px; height: 16px; vertical-align: middle; image-rendering: pixelated;"> Tokens</h3>
               </div>
               <p style="margin-bottom: 12px;">Hidden <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated;"> tokens are scattered throughout G3.OS!</p>
-              <p style="margin-bottom: 12px;">Current progress: <strong>${this.tokensFound}/6</strong></p>
+              <p style="margin-bottom: 12px;">Current progress: <strong>${this.tokensFound}/10</strong></p>
               <div style="background: #ffffff; border: 2px solid #808080; border-style: inset; padding: 8px; margin: 12px 0;">
                 <p style="font-size: 10px; color: #666;">💡 Tip: Try exploring different menus and clicking on things...</p>
               </div>
@@ -3152,6 +3152,7 @@
       }
 
       const simOS = new SimOSClassic();
+      window.simOS = simOS;
     </script>
 
     <script>
@@ -3549,6 +3550,11 @@
     if (attempts >= 30 && percentage >= 70 && localStorage.getItem('task1-completed') !== 'true') {
       localStorage.setItem('task1-completed', 'true');
       document.getElementById('task1').checked = true;
+
+      // Donner le token
+      if (window.simOS && typeof window.simOS.foundToken === 'function') {
+        window.simOS.foundToken('reflex-game');
+      }
 
       // Message de félicitations
       setTimeout(() => {
