@@ -685,6 +685,146 @@
           transform: translate(-50%, -50%) rotate(2deg);
         }
       }
+
+      /* Volume Game Styles */
+      .volume-game-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+
+      .volume-game-window {
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-window);
+        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+        min-width: 320px;
+        max-width: 90vw;
+      }
+
+      .volume-game-window .window-titlebar {
+        background: var(--win-title-active);
+        color: white;
+        padding: 3px 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: bold;
+      }
+
+      .volume-game-window .window-close {
+        background: var(--win-gray);
+        border: 1px solid;
+        border-color: var(--border-raised);
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        padding: 0;
+        font-family: inherit;
+      }
+
+      .volume-game-window .window-close:active {
+        border-color: var(--border-sunken);
+      }
+
+      .volume-game-content {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .game-instructions {
+        font-size: 12px;
+        text-align: center;
+        color: var(--win-black);
+        font-weight: bold;
+      }
+
+      .volume-bar-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding: 10px 0;
+      }
+
+      .volume-bar {
+        width: 60px;
+        height: 250px;
+        background: var(--win-white);
+        border: 2px solid;
+        border-color: var(--border-sunken);
+        position: relative;
+        box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3);
+      }
+
+      .volume-target {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(180deg, #00ff00 0%, #00cc00 100%);
+        border: 2px solid #008800;
+        z-index: 1;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+      }
+
+      .volume-cursor {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(180deg, #ff0000 0%, #cc0000 100%);
+        border: 1px solid #880000;
+        z-index: 2;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+        transition: top 0.05s linear;
+      }
+
+      .game-score {
+        font-size: 14px;
+        font-weight: bold;
+        color: var(--win-black);
+      }
+
+      .game-message {
+        font-size: 13px;
+        font-weight: bold;
+        min-height: 20px;
+        text-align: center;
+      }
+
+      .game-message.success {
+        color: #008800;
+      }
+
+      .game-message.fail {
+        color: #cc0000;
+      }
+
+      .game-reset-btn {
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+        padding: 4px 12px;
+        font-size: 11px;
+        font-family: inherit;
+        cursor: pointer;
+        min-width: 100px;
+      }
+
+      .game-reset-btn:active {
+        border-color: var(--border-sunken);
+      }
     </style>
     <script>
       // Ultra-early capture-phase unhandledrejection guard (installed before SDK)
@@ -792,7 +932,7 @@
       <div class="quick-launch"></div>
       <div class="taskbar-items"></div>
       <div class="system-tray">
-        <div class="tray-icon">🔊</div>
+        <div class="tray-icon" id="volume-icon" style="cursor: pointer;">🔊</div>
         <div class="tray-icon">🔌</div>
         <div id="clock">00:00</div>
       </div>
@@ -862,6 +1002,29 @@
     <div id="screensaver" style="display: none">
       <canvas id="screensaver-canvas"></canvas>
     </div>
+
+    <!-- Volume Game Modal -->
+    <div id="volume-game-modal" class="volume-game-modal" style="display: none;">
+      <div class="volume-game-window">
+        <div class="window-titlebar">
+          <span class="window-title">🔊 Volume Control</span>
+          <button class="window-close" id="volume-game-close">✕</button>
+        </div>
+        <div class="volume-game-content">
+          <div class="game-instructions">Cliquez quand le curseur est sur la zone verte !</div>
+          <div class="volume-bar-container">
+            <div class="volume-bar">
+              <div class="volume-target" id="volume-target"></div>
+              <div class="volume-cursor" id="volume-cursor"></div>
+            </div>
+          </div>
+          <div class="game-score" id="game-score">Score: 0 / 0</div>
+          <div class="game-message" id="game-message"></div>
+          <button class="game-reset-btn" id="game-reset">Nouvelle partie</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       class SimOSClassic {
         constructor() {
@@ -3251,6 +3414,174 @@
       playDialUpSound();
     }
   }, true); // capture to run before other handlers, but harmless if bubbling
+})();
+</script>
+
+<script>
+// Volume Game Logic
+(function() {
+  const modal = document.getElementById('volume-game-modal');
+  const volumeIcon = document.getElementById('volume-icon');
+  const closeBtn = document.getElementById('volume-game-close');
+  const resetBtn = document.getElementById('game-reset');
+  const cursor = document.getElementById('volume-cursor');
+  const target = document.getElementById('volume-target');
+  const scoreDisplay = document.getElementById('game-score');
+  const messageDisplay = document.getElementById('game-message');
+
+  let isPlaying = false;
+  let cursorPosition = 0;
+  let direction = 1;
+  let animationFrame = null;
+  let score = 0;
+  let attempts = 0;
+  let speed = 2;
+
+  // Positionner la cible à un endroit aléatoire
+  function randomizeTarget() {
+    const barHeight = 250;
+    const targetHeight = 40;
+    const maxTop = barHeight - targetHeight - 4;
+    const randomTop = Math.floor(Math.random() * maxTop);
+    target.style.top = randomTop + 'px';
+    return randomTop;
+  }
+
+  // Ouvrir le modal
+  function openGame() {
+    modal.style.display = 'flex';
+    resetGame();
+    startAnimation();
+  }
+
+  // Fermer le modal
+  function closeGame() {
+    modal.style.display = 'none';
+    stopAnimation();
+  }
+
+  // Démarrer l'animation du curseur
+  function startAnimation() {
+    if (isPlaying) return;
+    isPlaying = true;
+
+    function animate() {
+      if (!isPlaying) return;
+
+      cursorPosition += direction * speed;
+
+      // Rebondir aux limites
+      if (cursorPosition >= 242) {
+        cursorPosition = 242;
+        direction = -1;
+      } else if (cursorPosition <= 0) {
+        cursorPosition = 0;
+        direction = 1;
+      }
+
+      cursor.style.top = cursorPosition + 'px';
+      animationFrame = requestAnimationFrame(animate);
+    }
+
+    animate();
+  }
+
+  // Arrêter l'animation
+  function stopAnimation() {
+    isPlaying = false;
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
+  }
+
+  // Vérifier si le curseur est sur la cible
+  function checkHit() {
+    if (!isPlaying) return;
+
+    attempts++;
+
+    const targetTop = parseInt(target.style.top || 0);
+    const targetBottom = targetTop + 40;
+    const cursorTop = cursorPosition;
+    const cursorBottom = cursorPosition + 8;
+
+    // Vérifier si le curseur touche la cible
+    const isHit = (cursorTop >= targetTop && cursorTop <= targetBottom) ||
+                  (cursorBottom >= targetTop && cursorBottom <= targetBottom) ||
+                  (cursorTop <= targetTop && cursorBottom >= targetBottom);
+
+    if (isHit) {
+      score++;
+      messageDisplay.textContent = '✓ Parfait !';
+      messageDisplay.className = 'game-message success';
+
+      // Accélérer légèrement
+      speed = Math.min(speed + 0.3, 5);
+
+      // Nouvelle cible après un court délai
+      setTimeout(() => {
+        randomizeTarget();
+        messageDisplay.textContent = '';
+      }, 500);
+    } else {
+      messageDisplay.textContent = '✗ Raté !';
+      messageDisplay.className = 'game-message fail';
+
+      setTimeout(() => {
+        messageDisplay.textContent = '';
+      }, 1000);
+    }
+
+    updateScore();
+  }
+
+  // Mettre à jour l'affichage du score
+  function updateScore() {
+    const percentage = attempts > 0 ? Math.round((score / attempts) * 100) : 0;
+    scoreDisplay.textContent = `Score: ${score} / ${attempts} (${percentage}%)`;
+  }
+
+  // Réinitialiser le jeu
+  function resetGame() {
+    score = 0;
+    attempts = 0;
+    cursorPosition = 0;
+    direction = 1;
+    speed = 2;
+    messageDisplay.textContent = '';
+    messageDisplay.className = 'game-message';
+    randomizeTarget();
+    updateScore();
+  }
+
+  // Event listeners
+  volumeIcon.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openGame();
+  });
+
+  closeBtn.addEventListener('click', closeGame);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeGame();
+    }
+  });
+
+  // Clic sur la barre pour tenter de toucher la cible
+  const volumeBar = document.querySelector('.volume-bar');
+  volumeBar.addEventListener('click', checkHit);
+
+  resetBtn.addEventListener('click', () => {
+    resetGame();
+    if (!isPlaying) {
+      startAnimation();
+    }
+  });
+
+  // Initialiser la position de la cible
+  randomizeTarget();
 })();
 </script>
 </body>
