@@ -1623,7 +1623,7 @@
               }, 300);
             }
 
-            // The Minimalist - 0 windows for 10 seconds
+            // The Minimalist - 0 windows for 60 seconds
             if (this.windows.size === 0 && !localStorage.getItem("og-secret-minimalist")) {
               if (this.emptyWindowsTimer) clearTimeout(this.emptyWindowsTimer);
               this.emptyWindowsTimer = setTimeout(() => {
@@ -1631,10 +1631,10 @@
                   this.foundSecret(
                     "minimalist",
                     "The Minimalist",
-                    "Ten seconds of pure emptiness. Zen mode achieved. In the void, you found enlightenment."
+                    "One minute of pure emptiness. Zen mode achieved. In the void, you found enlightenment."
                   );
                 }
-              }, 10000);
+              }, 60000);
             }
           }
         }
@@ -1671,6 +1671,12 @@
         maximizeWindow(windowId) {
           const data = this.windows.get(windowId);
           if (!data) return;
+
+          // If window is minimized, restore it first
+          if (data.minimized) {
+            this.restoreWindow(windowId);
+          }
+
           const windowElement = data.element;
           if (data.isMaximized) {
             // Restore original size
@@ -1793,16 +1799,6 @@
               unread: false,
               date: "11/09/2025",
               visible: true,
-            },
-            {
-              id: 3,
-              from: "Unknown Sender",
-              subject: "Binary Message",
-              body: "01001001 00100000 01000001 01001101 00100000 01000001 01001100 01001001 01010110 01000101",
-              unread: this.tokensFound >= 2,
-              date: "11/11/2025",
-              isBinary: true,
-              visible: this.tokensFound >= 2,
             },
             {
               id: 4,
@@ -2019,23 +2015,27 @@
           this.playDingSound();
 
           const content = `
-            <div style="padding: 20px; text-align: center;">
-              <div style="font-size: 64px; margin-bottom: 16px;">🔍</div>
-              <h2 style="color: #ff6600; margin-bottom: 12px;">${secretName}</h2>
-              <p style="margin-bottom: 16px;">${description}</p>
-              <p style="color: #666; font-size: 11px; margin-bottom: 20px;">
-                (This secret does not count as a token)
+            <div style="padding: 24px; text-align: center; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+              <div style="font-size: 64px; margin-bottom: 16px;">🏆</div>
+              <h2 style="color: #00ff88; font-size: 28px; margin-bottom: 12px; text-shadow: 0 0 10px #00ff88;">ACHIEVEMENT UNLOCKED!</h2>
+              <h3 style="color: #ffffff; font-size: 18px; margin-bottom: 20px;">${secretName}</h3>
+              <div style="background: rgba(0,255,136,0.1); border: 2px solid #00ff88; padding: 16px; margin: 20px 0; border-radius: 8px;">
+                <p style="color: #ffffff; font-size: 14px; line-height: 1.6;">${description}</p>
+              </div>
+              <p style="color: #888; font-size: 11px; margin-top: 16px;">
+                (This achievement does not count as a token)
               </p>
-              <button class="win95 close-window-btn">OK</button>
+              <br>
+              <button class="win95 close-window-btn" style="background: #00ff88; font-weight: bold;">AWESOME!</button>
             </div>
           `;
           const win = this.createWindow({
-            title: "🔍 Secret Discovered!",
+            title: "🏆 Achievement Unlocked!",
             content,
             width: 400,
-            height: 280,
+            height: 400,
             x: window.innerWidth / 2 - 200,
-            y: window.innerHeight / 2 - 140,
+            y: window.innerHeight / 2 - 200,
           });
           setTimeout(() => {
             const btn = win.querySelector(".close-window-btn");
@@ -2048,18 +2048,6 @@
         }
 
         setupSecretDetection() {
-          // F5 Addict - Detect page reloads
-          const pageLoadCount = parseInt(localStorage.getItem("og-page-loads") || "0") + 1;
-          localStorage.setItem("og-page-loads", pageLoadCount.toString());
-          if (pageLoadCount === 5 && !localStorage.getItem("og-secret-f5-addict")) {
-            setTimeout(() => {
-              this.foundSecret(
-                "f5-addict",
-                "The F5 Addict",
-                "Five page reloads detected. Commitment issues? Or just testing? Either way, you're persistent!"
-              );
-            }, 2000);
-          }
 
           // Night Owl - Check if playing between midnight and 5am
           const hour = new Date().getHours();
@@ -2088,19 +2076,6 @@
             }
           });
 
-          // Inspector - Detect DevTools
-          const checkDevTools = () => {
-            if ((window.outerWidth - window.innerWidth > 160 || window.outerHeight - window.innerHeight > 160)) {
-              if (!localStorage.getItem("og-secret-inspector")) {
-                this.foundSecret(
-                  "inspector",
-                  "The Inspector",
-                  "Looking under the hood? DevTools detected. Respect the curiosity. Hack the planet!"
-                );
-              }
-            }
-          };
-          setInterval(checkDevTools, 1000);
         }
 
         unlockSnake() {
@@ -3002,8 +2977,8 @@
               emoji: "🧘",
               category: "BEHAVIORAL",
               description: "Achieved zen mode",
-              detail: "0 windows for 10 seconds",
-              hint: "In the void, enlightenment awaits. Ten seconds of absolute emptiness. No windows, no distractions."
+              detail: "0 windows for 60 seconds",
+              hint: "In the void, enlightenment awaits. One minute of absolute emptiness. No windows, no distractions."
             },
             {
               id: "maximalist",
@@ -3127,24 +3102,6 @@
               description: "Wake up, Neo...",
               detail: "Typed 'matrix' in Run",
               hint: "Type the name of reality where commands dwell. Green rain falls. Neo awaits. The truth is a six-letter word."
-            },
-            {
-              id: "inspector",
-              name: "The Inspector",
-              emoji: "🔍",
-              category: "META",
-              description: "Hacker mode activated",
-              detail: "Opened DevTools (F12)",
-              hint: "Pull back the curtain. Peek behind the simulation. Press F12 or right-click inspect. The code sees all."
-            },
-            {
-              id: "f5-addict",
-              name: "The F5 Addict",
-              emoji: "🔄",
-              category: "META",
-              description: "Commitment issues detected",
-              detail: "Reloaded page 5 times",
-              hint: "Five resurrections of the page. Commitment issues detected. Refresh, restart, reload. Persevere."
             },
             {
               id: "incantation",
@@ -3346,87 +3303,6 @@
         <span style="color: #888; font-size: 10px;">Hint: "Master the serpent's path and reach the ultimate score."</span><br>
         <span class="secret-reveal" data-secret="11" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
         <span class="secret-answer" data-secret="11" style="display: none; color: #ff0000; font-size: 10px;"><br>→ Collect 10 tokens → Play Snake → Reach score 30</span>
-      </div>
-
-      <hr style="border: 1px solid #808080; margin: 12px 0;">
-
-      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #ff6600;">
-        <strong>HIDDEN SECRETS (Non-Token Discoveries):</strong><br>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Incantation" - Speak our true name where commands are born.</span><br>
-          <span style="color: #888; font-size: 10px;">  Binary whispers: 01100111 01100001 01101101 00110011 01110011</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Time Traveler" - Three strikes upon the clock within two heartbeats.</span><br>
-          <span style="color: #888; font-size: 10px;">  Time bends for those who dare to click its face.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Minimalist" - In the void, enlightenment awaits.</span><br>
-          <span style="color: #888; font-size: 10px;">  Ten seconds of absolute emptiness. No windows, no distractions.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Maximalist" - Ten worlds open simultaneously.</span><br>
-          <span style="color: #888; font-size: 10px;">  Chaos incarnate. Your desktop bleeds with productivity.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Night Owl" - The hour between midnight and dawn.</span><br>
-          <span style="color: #888; font-size: 10px;">  When normal souls sleep, explorers boot up G3.OS.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Double Agent" - Inception within Windows within browser.</span><br>
-          <span style="color: #888; font-size: 10px;">  Open the computer twice. Reality layers upon itself.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Speedrunner" - Three tokens in sixty ticks of time.</span><br>
-          <span style="color: #888; font-size: 10px;">  Speed meets skill. No hesitation, only execution.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Painter" - Thirty seconds of continuous artistic flow.</span><br>
-          <span style="color: #888; font-size: 10px;">  The canvas knows when true dedication touches its surface.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Archaeologist" - Five pilgrimages to the sacred archives.</span><br>
-          <span style="color: #888; font-size: 10px;">  The seeker reads secrets.txt again and again. Obsession rewarded.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Wallpaper Addict" - Five transformations of the canvas.</span><br>
-          <span style="color: #888; font-size: 10px;">  Interior design is passion. Change it once, change it forever.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Matrix" - Type the name of reality where commands dwell.</span><br>
-          <span style="color: #888; font-size: 10px;">  Green rain falls. Neo awaits. The truth is a six-letter word.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Inspector" - Pull back the curtain. Peek behind the simulation.</span><br>
-          <span style="color: #888; font-size: 10px;">  Press F12 or right-click inspect. The code sees all.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The F5 Addict" - Five resurrections of the page.</span><br>
-          <span style="color: #888; font-size: 10px;">  Commitment issues detected. Refresh, restart, reload. Persevere.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Clippy Conspiracy" - The assistant knows more than he lets on.</span><br>
-          <span style="color: #888; font-size: 10px;">  Persistence beyond the sixth revelation shall unveil the truth.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Closer" - Twenty windows closed, a pattern revealed.</span><br>
-          <span style="color: #888; font-size: 10px;">  Are you organized, or running from commitment?</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Janitor" - In the Recycle Bin's depths, past the seventy-fifth treasure,</span><br>
-          <span style="color: #888; font-size: 10px;">  lies a file that refuses to die. Seek the hundredth item.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Drag Queen" - Twenty journeys across the desktop.</span><br>
-          <span style="color: #888; font-size: 10px;">  The sticky note seeks its perfect position. Help it find peace.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #888; font-size: 10px;">• "The Spam Clicker" - Fifty clicks in five heartbeats.</span><br>
-          <span style="color: #888; font-size: 10px;">  CLICK CLICK CLICK. The UI trembles at your energy.</span><br>
-        </div>
-        <div style="margin-top: 8px;">
-          <span style="color: #666; font-size: 9px; font-style: italic;">  (These unlock secrets, but do not award tokens)</span>
-        </div>
       </div>
 
       <hr style="border: 1px solid #808080; margin: 12px 0;">
@@ -3735,7 +3611,11 @@
               okBtn.addEventListener("click", () => {
                 const command = input.value.toLowerCase().trim();
                 if (command === "gam3s") {
-                  this.showAchievement();
+                  this.foundSecret(
+                    "incantation",
+                    "The Incantation",
+                    "You discovered the sacred command! Welcome to the GAM3RS community. Visit gam3s.gg for more adventures!"
+                  );
                   this.closeWindow(win.id);
                 } else if (command === "matrix") {
                   this.foundSecret(
