@@ -948,6 +948,7 @@
         <div class="start-menu-item" data-app="help"><span class="start-menu-item-icon">❓</span>Help</div>
         <div class="start-menu-item" data-app="run"><span class="start-menu-item-icon">💾</span>Run...</div>
         <div class="start-menu-separator"></div>
+        <div class="start-menu-item" data-app="restart"><span class="start-menu-item-icon">🔄</span>Restart Game...</div>
         <div class="start-menu-item" data-app="shutdown"><span class="start-menu-item-icon">⏻</span>Shut Down...</div>
       </div>
     </div>
@@ -1393,6 +1394,9 @@
             case "shutdown":
               this.showShutdownDialog();
               break;
+            case "restart":
+              this.showRestartDialog();
+              break;
             case "run":
               this.showRunDialog();
               break;
@@ -1669,22 +1673,27 @@
           if (!data) return;
           const windowElement = data.element;
           if (data.isMaximized) {
+            // Restore original size
             windowElement.style.width = data.originalSize.width + "px";
             windowElement.style.height = data.originalSize.height + "px";
             windowElement.style.left = data.originalSize.x + "px";
             windowElement.style.top = data.originalSize.y + "px";
+            windowElement.classList.remove("maximized");
             data.isMaximized = false;
           } else {
+            // Save original size
             data.originalSize = {
               width: windowElement.offsetWidth,
               height: windowElement.offsetHeight,
               x: windowElement.offsetLeft,
               y: windowElement.offsetTop,
             };
-            windowElement.style.width = window.innerWidth - 4 + "px";
-            windowElement.style.height = window.innerHeight - 32 + "px";
-            windowElement.style.left = "0px";
-            windowElement.style.top = "0px";
+            // Maximize to full screen (accounting for taskbar = 40px)
+            windowElement.style.width = "calc(100vw - 4px)";
+            windowElement.style.height = "calc(100vh - 44px)";
+            windowElement.style.left = "0";
+            windowElement.style.top = "0";
+            windowElement.classList.add("maximized");
             data.isMaximized = true;
           }
         }
@@ -1977,12 +1986,37 @@
           }
         }
 
+        playDingSound() {
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+          } catch (e) {
+            console.warn("Could not play ding sound", e);
+          }
+        }
+
         foundSecret(secretId, secretName, description) {
           const storageKey = "og-secret-" + secretId;
           if (localStorage.getItem(storageKey)) {
             return;
           }
           localStorage.setItem(storageKey, "true");
+
+          // Play ding sound
+          this.playDingSound();
 
           const content = `
             <div style="padding: 20px; text-align: center;">
@@ -3808,6 +3842,51 @@
             overlay.style.opacity = "0";
             setTimeout(() => overlay.remove(), 500);
           }, 3000);
+        }
+
+        showRestartDialog() {
+          const content = `
+            <div style="padding: 20px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+              <h3 style="margin-bottom: 16px;">Restart Game</h3>
+              <p style="margin-bottom: 16px; font-size: 12px;">This will reset all your progress:</p>
+              <div style="background: rgba(255,102,0,0.1); border: 2px solid #ff6600; padding: 12px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
+                <ul style="font-size: 11px; margin: 0; padding-left: 20px;">
+                  <li>All tokens will be lost</li>
+                  <li>All achievements will be locked</li>
+                  <li>Game progress will be reset</li>
+                </ul>
+              </div>
+              <p style="margin-bottom: 20px; font-weight: bold; color: #ff6600;">Are you sure?</p>
+              <button class="win95" id="restart-confirm-btn" style="background: #ff6600; color: white; font-weight: bold; margin-right: 8px;">Yes, Restart</button>
+              <button class="win95" id="restart-cancel-btn">Cancel</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "⚠️ Restart Game",
+            content,
+            width: 350,
+            height: 320,
+            x: window.innerWidth / 2 - 175,
+            y: window.innerHeight / 2 - 160,
+          });
+          setTimeout(() => {
+            const confirmBtn = document.getElementById("restart-confirm-btn");
+            const cancelBtn = document.getElementById("restart-cancel-btn");
+            if (confirmBtn) {
+              confirmBtn.addEventListener("click", () => {
+                // Clear ALL localStorage
+                localStorage.clear();
+                // Reload the page
+                location.reload();
+              });
+            }
+            if (cancelBtn) {
+              cancelBtn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 100);
         }
 
         showShutdownDialog() {
