@@ -1035,6 +1035,7 @@
           this.zIndex = 100;
           this.tokensFound = 0;
           this.clippyClicks = 0;
+          this.windowsClosed = 0;
           this.idleTimer = null;
           this.screensaverActive = false;
           this.minimizedWindowCount = 0;
@@ -1228,18 +1229,44 @@
             '"Almost there!"',
             '"One more time!"',
             '"You found my secret! 🎉"',
+            '"Still clicking?"',
+            '"I admire your persistence..."',
+            '"You\'re really dedicated!"',
+            '"Click #10! Halfway to something..."',
+            '"Going for the record?"',
+            '"My creator didn\'t expect this..."',
+            '"You must really like me!"',
+            '"Click #15! Almost there..."',
+            '"The truth is near..."',
+            '"Just a few more..."',
+            '"So close now..."',
+            '"One more, I promise!"',
+            '"🎊 THE CLIPPY CONSPIRACY UNLOCKED! 🎊"',
           ];
           clippy.addEventListener("click", () => {
             this.clippyClicks++;
-            if (this.clippyClicks < messages.length - 1) {
+            if (this.clippyClicks < 6) {
               clippyMessage.textContent = messages[this.clippyClicks];
               clippy.style.animation = "none";
               setTimeout(() => {
                 clippy.style.animation = "clippy-bounce 0.5s ease-in-out";
               }, 10);
-            } else if (this.clippyClicks === messages.length - 1) {
-              clippyMessage.textContent = messages[messages.length - 1];
+            } else if (this.clippyClicks === 6) {
+              clippyMessage.textContent = messages[6];
               this.foundToken("clippy-secret");
+            } else if (this.clippyClicks < 20) {
+              clippyMessage.textContent = messages[this.clippyClicks];
+              clippy.style.animation = "none";
+              setTimeout(() => {
+                clippy.style.animation = "clippy-bounce 0.5s ease-in-out";
+              }, 10);
+            } else if (this.clippyClicks === 20) {
+              clippyMessage.textContent = messages[19];
+              this.foundSecret(
+                "clippy-conspiracy",
+                "The Clippy Conspiracy",
+                "You discovered Clippy's deepest secret! Your persistence has uncovered the truth: Clippy was never annoying... you were just never patient enough to listen."
+              );
             }
           });
           let isDragging = false;
@@ -1518,6 +1545,18 @@
             data.element.remove();
             data.taskButton.remove();
             this.windows.delete(windowId);
+
+            // Track closed windows for "The Closer" secret
+            this.windowsClosed++;
+            if (this.windowsClosed === 20) {
+              setTimeout(() => {
+                this.foundSecret(
+                  "the-closer",
+                  "The Closer",
+                  "You've closed 20 windows! Some say you're organized. Others say you're running from commitment. Either way, you're a master of closure."
+                );
+              }, 300);
+            }
           }
         }
 
@@ -1845,6 +1884,42 @@
               document.getElementById("task2").checked = true;
             }, 1000);
           }
+        }
+
+        foundSecret(secretId, secretName, description) {
+          const storageKey = "og-secret-" + secretId;
+          if (localStorage.getItem(storageKey)) {
+            return;
+          }
+          localStorage.setItem(storageKey, "true");
+
+          const content = `
+            <div style="padding: 20px; text-align: center;">
+              <div style="font-size: 64px; margin-bottom: 16px;">🔍</div>
+              <h2 style="color: #ff6600; margin-bottom: 12px;">${secretName}</h2>
+              <p style="margin-bottom: 16px;">${description}</p>
+              <p style="color: #666; font-size: 11px; margin-bottom: 20px;">
+                (This secret does not count as a token)
+              </p>
+              <button class="win95 close-window-btn">OK</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "🔍 Secret Discovered!",
+            content,
+            width: 400,
+            height: 280,
+            x: window.innerWidth / 2 - 200,
+            y: window.innerHeight / 2 - 140,
+          });
+          setTimeout(() => {
+            const btn = win.querySelector(".close-window-btn");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 50);
         }
 
         unlockSnake() {
@@ -2474,6 +2549,12 @@
                 name: "token_TOKEN.dat",
                 isToken: true,
               });
+            } else if (i === 99) {
+              trashFiles.push({
+                icon: '🔍',
+                name: "DO_NOT_DELETE.exe",
+                isSecret: true,
+              });
             } else {
               trashFiles.push({
                 icon: fileType.icon,
@@ -2485,9 +2566,9 @@
           const trashHTML = trashFiles
             .map(
               (file, index) => `
-            <div style="display: inline-block; width: 80px; text-align: center; padding: 8px; margin: 4px; cursor: ${file.isToken ? "pointer" : "default"}; vertical-align: top;" class="${file.isToken ? "trash-token" : ""}" data-index="${index}">
+            <div style="display: inline-block; width: 80px; text-align: center; padding: 8px; margin: 4px; cursor: ${file.isToken || file.isSecret ? "pointer" : "default"}; vertical-align: top;" class="${file.isToken ? "trash-token" : ""} ${file.isSecret ? "trash-secret" : ""}" data-index="${index}">
               <div style="font-size: 32px; margin-bottom: 4px;">${file.icon}</div>
-              <div style="font-size: 9px; word-wrap: break-word; color: ${file.isToken ? "#00ff88" : "#000000"}; font-weight: ${file.isToken ? "bold" : "normal"};">${file.name}</div>
+              <div style="font-size: 9px; word-wrap: break-word; color: ${file.isToken ? "#00ff88" : file.isSecret ? "#ff6600" : "#000000"}; font-weight: ${file.isToken || file.isSecret ? "bold" : "normal"};">${file.name}</div>
             </div>
           `,
             )
@@ -2520,6 +2601,16 @@
             if (tokenItem) {
               tokenItem.addEventListener("click", () => {
                 this.foundToken("recycle-bin-token");
+              });
+            }
+            const secretItem = win.querySelector(".trash-secret");
+            if (secretItem) {
+              secretItem.addEventListener("click", () => {
+                this.foundSecret(
+                  "the-janitor",
+                  "The Janitor",
+                  "You discovered the system janitor's forbidden file! Legend says this executable has been deleted 1000 times, yet it always returns. It contains the secrets of what really happens when you empty the Recycle Bin."
+                );
               });
             }
           }, 100);
