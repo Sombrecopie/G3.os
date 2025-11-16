@@ -961,7 +961,7 @@
         <ul class="todo-list">
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task2" /><label for="task2" class="todo-text"
-              >Find 10
+              >Find all
               <img
                 src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
                 style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
@@ -971,12 +971,7 @@
           </li>
           <li class="todo-item">
             <input type="checkbox" class="win95 todo-checkbox" id="task4" /><label for="task4" class="todo-text"
-              >Find all <span id="total-tokens">11</span>
-              <img
-                src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
-                style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
-              />
-              tokens</label
+              >Win a Minesweeper game</label
             >
           </li>
           <li class="todo-item">
@@ -1072,6 +1067,9 @@
           }
           if (localStorage.getItem("task3-completed") === "true") {
             document.getElementById("task3").checked = true;
+          }
+          if (localStorage.getItem("minesweeper-won") === "true") {
+            document.getElementById("task4").checked = true;
           }
         }
 
@@ -1217,11 +1215,8 @@
           if (counter) {
             counter.textContent = this.tokensFound;
           }
-          if (this.tokensFound >= 10) {
-            document.getElementById("task2").checked = true;
-          }
           if (this.tokensFound >= 11) {
-            document.getElementById("task4").checked = true;
+            document.getElementById("task2").checked = true;
           }
           const clippy = document.getElementById("clippy");
           const clippyMessage = document.getElementById("clippy-message");
@@ -1842,13 +1837,12 @@
           }, 50);
           if (this.tokensFound >= 10) {
             setTimeout(() => {
-              document.getElementById("task2").checked = true;
               this.unlockSnake();
             }, 1000);
           }
           if (this.tokensFound >= 11) {
             setTimeout(() => {
-              document.getElementById("task4").checked = true;
+              document.getElementById("task2").checked = true;
             }, 1000);
           }
         }
@@ -1858,7 +1852,7 @@
             <div style="padding: 24px; text-align: center;">
               <div style="font-size: 64px; margin-bottom: 16px;">🎉</div>
               <h2 style="color: #00ff88; margin-bottom: 12px;">CONGRATULATIONS!</h2>
-              <p style="margin-bottom: 8px;">You found all 6 tokens!</p>
+              <p style="margin-bottom: 8px;">You found 10 tokens!</p>
               <p style="font-weight: bold; margin-bottom: 20px;">🐍 SNAKE GAME UNLOCKED! 🐍</p>
               <p style="font-size: 10px; color: #666; margin-bottom: 16px;">A new icon has appeared on your desktop!</p>
               <button class="win95 close-window-btn" style="background: #00ff88; font-weight: bold;">AWESOME!</button>
@@ -2994,6 +2988,7 @@
                 }
                 if (!localStorage.getItem("minesweeper-won")) {
                   localStorage.setItem("minesweeper-won", "true");
+                  document.getElementById("task4").checked = true;
                   setTimeout(() => {
                     this.foundToken("minesweeper-victory");
                   }, 500);
