@@ -1,0 +1,3257 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>G3.OS Classic - Windows Style</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --win-gray: #c0c0c0;
+        --win-dark-gray: #808080;
+        --win-light-gray: #dfdfdf;
+        --win-white: #ffffff;
+        --win-black: #000000;
+        --win-blue: #000080;
+        --win-light-blue: #1084d0;
+        --win-title-active: #000080;
+        --win-title-inactive: #808080;
+        --win-desktop: #008080;
+        --border-raised: #ffffff #808080 #808080 #ffffff;
+        --border-sunken: #808080 #ffffff #ffffff #808080;
+        --border-window: #dfdfdf #000000 #000000 #dfdfdf;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "MS Sans Serif", "Microsoft Sans Serif", sans-serif;
+        font-size: 11px;
+        background: var(--win-desktop);
+        overflow: hidden;
+        cursor: default;
+        -webkit-font-smoothing: none;
+        -moz-osx-font-smoothing: none;
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+      }
+      .inset {
+        border-style: solid;
+        border-width: 2px;
+        border-color: var(--border-sunken);
+      }
+      .outset {
+        border-style: solid;
+        border-width: 2px;
+        border-color: var(--border-raised);
+      }
+      #boot-screen {
+        position: fixed;
+        inset: 0;
+        background: #000000;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        font-family: "VT323", "Lucida Console", monospace;
+        font-size: 16px;
+      }
+      #boot-screen.hidden {
+        display: none;
+      }
+      .boot-logo {
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      .boot-logo-text {
+        font-size: 48px;
+        font-weight: bold;
+        background: linear-gradient(180deg, #ff0000, #ffff00, #00ff00, #00ffff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+      }
+      .boot-version {
+        color: #808080;
+        font-size: 14px;
+      }
+      .boot-progress {
+        width: 400px;
+        max-width: 90vw;
+        height: 20px;
+        background: #000000;
+        border: 2px solid #ffffff;
+        margin-top: 20px;
+        position: relative;
+      }
+      .boot-progress-bar {
+        height: 100%;
+        background: repeating-linear-gradient(90deg, #ffffff 0px, #ffffff 8px, #000000 8px, #000000 16px);
+        width: 0%;
+        transition: width 0.3s linear;
+      }
+      #desktop {
+        position: relative;
+        width: 100vw;
+        height: calc(100vh - 28px);
+        background: var(--win-desktop);
+        background-image: repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 0, 0, 0.03) 2px,
+          rgba(0, 0, 0, 0.03) 4px
+        );
+      }
+      .desktop-icon {
+        position: absolute;
+        width: 75px;
+        padding: 4px;
+        text-align: center;
+        cursor: default;
+        user-select: none;
+      }
+      .desktop-icon:hover .icon-image {
+        filter: brightness(1.1);
+      }
+      .desktop-icon.selected {
+        background: rgba(0, 0, 128, 0.3);
+      }
+      .icon-image {
+        width: 32px;
+        height: 32px;
+        margin: 0 auto 4px;
+        image-rendering: pixelated;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+      .icon-label {
+        color: #ffffff;
+        font-size: 11px;
+        text-shadow: 1px 1px 1px #000000;
+        word-wrap: break-word;
+      }
+      #taskbar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 28px;
+        background: var(--win-gray);
+        border-top: 2px solid var(--win-white);
+        display: flex;
+        align-items: center;
+        padding: 2px;
+        z-index: 9999;
+      }
+      #start-button {
+        height: 22px;
+        padding: 0 6px 0 2px;
+        margin-right: 4px;
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        font-size: 11px;
+        cursor: default;
+        flex-shrink: 0;
+      }
+      #start-button:active,
+      #start-button.active {
+        border-color: var(--border-sunken);
+      }
+      .start-logo {
+        width: 16px;
+        height: 16px;
+        margin-right: 4px;
+        background: linear-gradient(135deg, #ff0000, #ffff00, #00ff00, #0000ff);
+      }
+      .quick-launch {
+        display: flex;
+        padding: 0 4px;
+        border-left: 1px solid var(--win-dark-gray);
+        border-right: 1px solid var(--win-white);
+        margin: 0 4px;
+        flex-shrink: 0;
+      }
+      .taskbar-items {
+        flex: 1;
+        display: flex;
+        gap: 2px;
+        padding: 0 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .taskbar-items::-webkit-scrollbar {
+        display: none;
+      }
+      .taskbar-button {
+        height: 22px;
+        min-width: 100px;
+        max-width: 160px;
+        padding: 0 4px;
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+        font-size: 11px;
+        text-align: left;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: default;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+      }
+      @media (max-width: 768px) {
+        .taskbar-button {
+          min-width: 80px;
+          max-width: 120px;
+          font-size: 10px;
+        }
+      }
+      .taskbar-button:active,
+      .taskbar-button.active {
+        border-color: var(--border-sunken);
+        font-weight: bold;
+      }
+      .system-tray {
+        display: flex;
+        align-items: center;
+        padding: 0 4px;
+        border: 2px solid;
+        border-color: var(--border-sunken);
+        background: var(--win-gray);
+        flex-shrink: 0;
+      }
+      .tray-icon {
+        width: 16px;
+        height: 16px;
+        margin: 0 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+      }
+      @media (max-width: 768px) {
+        .tray-icon {
+          display: none;
+        }
+        .tray-icon:last-of-type {
+          display: flex;
+        }
+      }
+      #clock {
+        font-size: 11px;
+        padding: 0 4px;
+        cursor: default;
+      }
+      #start-menu {
+        position: fixed;
+        bottom: 28px;
+        left: 0;
+        width: 170px;
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+        display: none;
+        z-index: 9998;
+      }
+      #start-menu.visible {
+        display: block;
+      }
+      .start-menu-sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 21px;
+        background: linear-gradient(180deg, #000080, #1084d0);
+        display: flex;
+        align-items: flex-end;
+        padding: 4px 2px;
+      }
+      .sidebar-text {
+        color: white;
+        font-size: 11px;
+        font-weight: bold;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        letter-spacing: 1px;
+      }
+      .start-menu-items {
+        margin-left: 21px;
+        padding: 2px;
+      }
+      .start-menu-item {
+        padding: 8px 8px 8px 28px;
+        position: relative;
+        cursor: default;
+        display: flex;
+        align-items: center;
+      }
+      .start-menu-item:hover {
+        background: var(--win-blue);
+        color: white;
+      }
+      .start-menu-item-icon {
+        position: absolute;
+        left: 4px;
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .start-menu-separator {
+        height: 2px;
+        margin: 2px 2px;
+        border-top: 1px solid var(--win-dark-gray);
+        border-bottom: 1px solid var(--win-white);
+      }
+      .window {
+        position: absolute;
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+        padding: 2px;
+        display: flex;
+        flex-direction: column;
+        min-width: 200px;
+        min-height: 100px;
+      }
+      .window.active {
+        z-index: 1000;
+      }
+      @media (max-width: 768px) {
+        .window {
+          width: calc(100vw - 20px) !important;
+          height: calc(100vh - 100px) !important;
+          left: 10px !important;
+          top: 10px !important;
+        }
+      }
+      .window-titlebar {
+        height: 18px;
+        background: linear-gradient(90deg, var(--win-title-active) 0%, #1084d0 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 2px;
+        font-weight: bold;
+        font-size: 11px;
+        cursor: default;
+        user-select: none;
+      }
+      .window.inactive .window-titlebar {
+        background: linear-gradient(90deg, var(--win-title-inactive) 0%, #b5b5b5 100%);
+      }
+      .window-title {
+        flex: 1;
+        padding: 0 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .window-controls {
+        display: flex;
+        gap: 2px;
+      }
+      .window-button {
+        width: 16px;
+        height: 14px;
+        background: var(--win-gray);
+        border: 1px solid;
+        border-color: var(--border-raised);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Marlett", sans-serif;
+        font-size: 10px;
+        cursor: default;
+      }
+      .window-button:active {
+        border-color: var(--border-sunken);
+      }
+      .window-button.minimize::before {
+        content: "_";
+      }
+      .window-button.maximize::before {
+        content: "□";
+      }
+      .window-button.close::before {
+        content: "×";
+      }
+      .window-menubar {
+        background: var(--win-gray);
+        border-bottom: 1px solid var(--win-dark-gray);
+        display: flex;
+        padding: 2px 4px;
+      }
+      .menu-item {
+        padding: 4px 8px;
+        cursor: default;
+      }
+      .menu-item:hover {
+        background: var(--win-blue);
+        color: white;
+      }
+      .window-content {
+        flex: 1;
+        background: white;
+        border: 2px solid;
+        border-color: var(--border-sunken);
+        padding: 8px;
+        overflow: auto;
+        font-size: 11px;
+      }
+      .window-statusbar {
+        height: 18px;
+        border: 1px solid;
+        border-color: var(--border-sunken);
+        display: flex;
+        align-items: center;
+        padding: 0 4px;
+        font-size: 11px;
+      }
+      .statusbar-panel {
+        padding: 0 4px;
+        border-right: 1px solid var(--win-dark-gray);
+      }
+      button.win95 {
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+        padding: 4px 12px;
+        font-size: 11px;
+        font-family: inherit;
+        cursor: default;
+        min-width: 75px;
+      }
+      button.win95:active {
+        border-color: var(--border-sunken);
+        padding: 5px 11px 3px 13px;
+      }
+      button.win95:focus {
+        outline: 1px dotted #000000;
+        outline-offset: -4px;
+      }
+      input[type="text"].win95,
+      textarea.win95 {
+        background: white;
+        border: 2px solid;
+        border-color: var(--border-sunken);
+        padding: 2px;
+        font-family: inherit;
+        font-size: 11px;
+      }
+      select.win95 {
+        background: white;
+        border: 2px solid;
+        border-color: var(--border-sunken);
+        padding: 2px;
+        font-family: inherit;
+        font-size: 11px;
+      }
+      input[type="checkbox"].win95,
+      input[type="radio"].win95 {
+        width: 13px;
+        height: 13px;
+        background: white;
+        border: 2px solid;
+        border-color: var(--border-sunken);
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: default;
+        pointer-events: none;
+      }
+      input[type="checkbox"].win95:checked::after {
+        content: "✓";
+        display: block;
+        text-align: center;
+        line-height: 9px;
+      }
+      input[type="radio"].win95 {
+        border-radius: 50%;
+      }
+      input[type="radio"].win95:checked::after {
+        content: "";
+        display: block;
+        width: 5px;
+        height: 5px;
+        background: black;
+        border-radius: 50%;
+        margin: 2px;
+      }
+      ::-webkit-scrollbar {
+        width: 16px;
+        height: 16px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--win-gray);
+        border: 1px solid;
+        border-color: var(--border-sunken);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+      }
+      ::-webkit-scrollbar-button {
+        background: var(--win-gray);
+        border: 2px solid;
+        border-color: var(--border-raised);
+        width: 16px;
+        height: 16px;
+      }
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+      .blink {
+        animation: blink 1s infinite;
+      }
+      * {
+        transition: none !important;
+      }
+      #bsod {
+        position: fixed;
+        inset: 0;
+        background: #0000aa;
+        color: #ffffff;
+        font-family: "Lucida Console", "Courier New", monospace;
+        font-size: 14px;
+        padding: 20px;
+        display: none;
+        z-index: 100000;
+        line-height: 1.4;
+      }
+      #bsod.visible {
+        display: block;
+      }
+      .bsod-text {
+        text-align: center;
+        margin-top: 15vh;
+      }
+      .bsod-title {
+        background: #aaaaaa;
+        color: #0000aa;
+        padding: 2px 8px;
+        display: inline-block;
+        margin-bottom: 20px;
+      }
+      #screensaver {
+        position: fixed;
+        inset: 0;
+        background: #000000;
+        z-index: 10001;
+      }
+      #screensaver-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #sticky-note {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 200px;
+        background: #ffff99;
+        border: 2px solid;
+        border-color: var(--border-raised);
+        padding: 2px;
+        z-index: 50;
+        box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
+      }
+      @media (max-width: 768px) {
+        #sticky-note {
+          width: 180px;
+          font-size: 10px;
+          top: 5px;
+          right: 5px;
+        }
+      }
+      .sticky-titlebar {
+        height: 18px;
+        background: linear-gradient(90deg, #f4d03f 0%, #f4e03f 100%);
+        color: #000000;
+        display: flex;
+        align-items: center;
+        padding: 0 4px;
+        font-weight: bold;
+        font-size: 11px;
+        cursor: move;
+      }
+      .sticky-content {
+        background: #ffff99;
+        padding: 8px;
+        min-height: 100px;
+        font-size: 11px;
+        color: #000000;
+      }
+      .clippy {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 8px;
+        font-size: 48px;
+        text-align: center;
+        line-height: 60px;
+        animation: clippy-bounce 2s ease-in-out infinite;
+      }
+      @keyframes clippy-bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+      .todo-list {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0 0;
+      }
+      .todo-item {
+        padding: 4px 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .todo-checkbox {
+        margin-top: 2px;
+        pointer-events: none;
+      }
+      .todo-text {
+        flex: 1;
+        word-wrap: break-word;
+      }
+      .email-list {
+        list-style: none;
+        padding: 0;
+      }
+      .email-item {
+        padding: 8px;
+        border-bottom: 1px solid #c0c0c0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .email-item:hover {
+        background: #e0e0e0;
+      }
+      .email-item.unread {
+        font-weight: bold;
+        background: #f0f0f0;
+      }
+      .email-icon {
+        font-size: 16px;
+      }
+      .email-subject {
+        flex: 1;
+      }
+      .virus-popup {
+        animation: shake 0.5s infinite;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        25% {
+          transform: translate(-50%, -50%) rotate(-2deg);
+        }
+        75% {
+          transform: translate(-50%, -50%) rotate(2deg);
+        }
+      }
+    </style>
+    <script>
+      // Ultra-early capture-phase unhandledrejection guard (installed before SDK)
+      (function () {
+        if (!window.__uhrInstalled) {
+          window.__uhrInstalled = true;
+          window.addEventListener(
+            "unhandledrejection",
+            function (event) {
+              try {
+                if (event && typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+                if (event && typeof event.preventDefault === "function") event.preventDefault();
+              } catch (_) {}
+              var r = event && event.reason;
+              var msg;
+              if (r instanceof Error) msg = r.message;
+              else if (typeof r === "string") msg = r;
+              else {
+                try {
+                  msg = JSON.stringify(r);
+                } catch (e) {
+                  msg = String(r);
+                }
+              }
+              console.error("Unhandled promise rejection (pre-SDK):", msg, r);
+            },
+            true,
+          );
+          window.addEventListener("error", function (ev) {
+            try {
+              var e = ev && ev.error;
+              var msg = e && e.message ? e.message : (ev && ev.message) || "Unknown error";
+              console.error("Window error:", msg, e || ev);
+            } catch (_) {}
+          });
+        }
+      })();
+    
+// --- Click sound effect injection ---
+// Bind globally as well so clicks anywhere trigger the sound (with throttle)
+(function(){
+  let __last=0; const __docHandler=()=>{ const now=Date.now(); if(now-__last<80) return; __last=now; window.playClickSfx && window.playClickSfx(); };
+  if (document.readyState === 'complete'){
+    document.addEventListener('click', __docHandler, true);
+    document.addEventListener('touchstart', __docHandler, {passive:true, capture:true});
+  } else {
+    window.addEventListener('load', ()=>{
+      document.addEventListener('click', __docHandler, true);
+      document.addEventListener('touchstart', __docHandler, {passive:true, capture:true});
+    });
+  }
+})();
+
+(function(){
+  const CLICK_SFX_URL = 'https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/old-computer-click-152513-L1L7ESjrnHNa7Vwf2vtIlD0KR0y2Cr.mp3?oOFD';
+  let __clickSfx;
+  function __initClickSfx(){
+    if (!__clickSfx){
+      __clickSfx = new Audio(CLICK_SFX_URL);
+      __clickSfx.preload = 'auto';
+      __clickSfx.volume = 0.8;
+    }
+  }
+  window.playClickSfx = function(){
+    try {
+      __initClickSfx();
+      if (typeof isMuted !== 'undefined' && isMuted) return;
+      __clickSfx.currentTime = 0;
+      const p = __clickSfx.play();
+      if (p && typeof p.catch === 'function') p.catch(()=>{});
+    } catch(e){}
+  }
+  window.addEventListener('load', () => {
+    const c = document.getElementById('canvas') || document.querySelector('canvas');
+    if (c){
+      c.addEventListener('click', window.playClickSfx);
+      c.addEventListener('touchstart', window.playClickSfx, { passive: true });
+    }
+  });
+})();
+// --- End click sound effect injection ---
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/@farcade/game-sdk@0.2.1/dist/index.min.js"></script>
+  </head>
+  <body>
+    <div id="boot-screen">
+      <div class="boot-logo">
+        <div class="boot-logo-text">G3.OS</div>
+        <div class="boot-version">Classic Edition v95.98.2000</div>
+      </div>
+      <div style="color: #808080; margin: 20px 0">
+        Starting G3.OS...<br />
+        <span id="boot-status">Loading system files...</span>
+      </div>
+      <div class="boot-progress">
+        <div id="boot-progress-bar" class="boot-progress-bar"></div>
+      </div>
+    </div>
+    <div id="desktop"></div>
+    <div id="taskbar">
+      <button id="start-button">
+        <div class="start-logo"></div>
+        <span>Start</span>
+      </button>
+      <div class="quick-launch"></div>
+      <div class="taskbar-items"></div>
+      <div class="system-tray">
+        <div class="tray-icon">🔊</div>
+        <div class="tray-icon">🔌</div>
+        <div id="clock">00:00</div>
+      </div>
+    </div>
+    <div id="start-menu">
+      <div class="start-menu-sidebar">
+        <div class="sidebar-text">G3.OS 95</div>
+      </div>
+      <div class="start-menu-items">
+        <div class="start-menu-item" data-app="find"><span class="start-menu-item-icon">🔍</span>Find ▶</div>
+        <div class="start-menu-item" data-app="help"><span class="start-menu-item-icon">❓</span>Help</div>
+        <div class="start-menu-item" data-app="run"><span class="start-menu-item-icon">💾</span>Run...</div>
+        <div class="start-menu-separator"></div>
+        <div class="start-menu-item" data-app="shutdown"><span class="start-menu-item-icon">⏻</span>Shut Down...</div>
+      </div>
+    </div>
+    <div id="sticky-note">
+      <div class="sticky-titlebar"><span style="flex: 1">📋 Objectives</span></div>
+      <div class="sticky-content">
+        <div class="clippy" id="clippy" style="cursor: pointer">📎</div>
+        <div style="text-align: center; font-style: italic; margin-bottom: 8px; font-size: 10px" id="clippy-message">
+          "Hi! I'm Clippy, your assistant!"
+        </div>
+        <ul class="todo-list">
+          <li class="todo-item">
+            <input type="checkbox" class="win95 todo-checkbox" id="task1" /><label for="task1" class="todo-text"
+              >Choose a wallpaper</label
+            >
+          </li>
+          <li class="todo-item">
+            <input type="checkbox" class="win95 todo-checkbox" id="task2" /><label for="task2" class="todo-text"
+              >Find 6
+              <img
+                src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1"
+                style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated"
+              />
+              tokens (<span id="token-count">0</span>/6)</label
+            >
+          </li>
+          <li class="todo-item">
+            <input type="checkbox" class="win95 todo-checkbox" id="task4" /><label for="task4" class="todo-text"
+              >Win a Minesweeper game</label
+            >
+          </li>
+          <li class="todo-item" id="task3-container">
+            <input type="checkbox" class="win95 todo-checkbox" id="task3" /><label for="task3" class="todo-text"
+              >Make a score of <span id="target-score">30</span> on <span id="game-name">[REDACTED]</span></label
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div id="bsod">
+      <div class="bsod-text">
+        <div class="bsod-title">Windows</div>
+        <br /><br />
+        A fatal exception 0E has occurred at 0028:C0011E36 in VXD VMM(01) +<br />
+        00010E36. The current application will be terminated.<br />
+        <br />
+        * Press any key to terminate the current application.<br />
+        * Press CTRL+ALT+DEL again to restart your computer. You will<br />
+        &nbsp;&nbsp;lose any unsaved information in all applications.<br />
+        <br />
+        <span class="blink">Press any key to continue _</span>
+      </div>
+    </div>
+    <div id="screensaver" style="display: none">
+      <canvas id="screensaver-canvas"></canvas>
+    </div>
+    <script>
+      class SimOSClassic {
+        constructor() {
+          this.windows = new Map();
+          this.activeWindow = null;
+          this.zIndex = 100;
+          this.tokensFound = 0;
+          this.clippyClicks = 0;
+          this.idleTimer = null;
+          this.screensaverActive = false;
+          this.minimizedWindowCount = 0;
+          this.init();
+        }
+
+        init() {
+          this.bootSequence();
+          this.setupClock();
+          this.setupEventListeners();
+          this.createDesktopIcons();
+          this.setupStickyNote();
+          this.loadSavedWallpaper();
+          this.checkSnakeUnlock();
+          this.setupScreensaver();
+        }
+
+        checkSnakeUnlock() {
+          if (localStorage.getItem("snake-unlocked") === "true") {
+            this.addSnakeIcon();
+            const gameName = document.getElementById("game-name");
+            if (gameName) {
+              gameName.textContent = "🐍 Snake Game";
+              gameName.style.color = "#00ff88";
+              gameName.style.fontWeight = "bold";
+            }
+          }
+          if (localStorage.getItem("task3-completed") === "true") {
+            document.getElementById("task3").checked = true;
+          }
+          if (localStorage.getItem("minesweeper-won") === "true") {
+            document.getElementById("task4").checked = true;
+          }
+        }
+
+        setupScreensaver() {
+          const resetTimer = () => {
+            if (this.idleTimer) clearTimeout(this.idleTimer);
+            if (this.screensaverActive) {
+              this.hideScreensaver();
+            }
+            this.idleTimer = setTimeout(() => {
+              this.showScreensaver();
+            }, 15000);
+          };
+          document.addEventListener("mousemove", resetTimer);
+          document.addEventListener("mousedown", resetTimer);
+          document.addEventListener("keydown", resetTimer);
+          resetTimer();
+        }
+
+        showScreensaver() {
+          this.screensaverActive = true;
+          const screensaver = document.getElementById("screensaver");
+          const canvas = document.getElementById("screensaver-canvas");
+          screensaver.style.display = "block";
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          const ctx = canvas.getContext("2d");
+          const logo = new Image();
+          logo.src =
+            "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/G3%20icon_main%20and%20dark%20border-7nTZOOmQoxbZQTC0yYwj3B7PLN9xPf.webp?9SMR";
+          let x = Math.random() * (canvas.width - 100);
+          let y = Math.random() * (canvas.height - 100);
+          let dx = 2;
+          let dy = 2;
+          const logoSize = 80;
+          if (!localStorage.getItem("og-token-screensaver")) {
+            setTimeout(() => {
+              this.foundToken("screensaver");
+            }, 2000);
+          }
+          logo.onload = () => {
+            const animate = () => {
+              if (!this.screensaverActive) return;
+              ctx.fillStyle = "#000000";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(logo, x, y, logoSize, logoSize);
+              x += dx;
+              y += dy;
+              if (x + logoSize >= canvas.width || x <= 0) {
+                dx = -dx;
+              }
+              if (y + logoSize >= canvas.height || y <= 0) {
+                dy = -dy;
+              }
+              requestAnimationFrame(animate);
+            };
+            animate();
+          };
+        }
+
+        hideScreensaver() {
+          this.screensaverActive = false;
+          document.getElementById("screensaver").style.display = "none";
+        }
+
+        bootSequence() {
+          const bootScreen = document.getElementById("boot-screen");
+          const progressBar = document.getElementById("boot-progress-bar");
+          const statusText = document.getElementById("boot-status");
+          const messages = [
+            "Loading system files...",
+            "Loading drivers...",
+            "Starting Windows 95...",
+            "Loading Explorer...",
+            "Loading complete.",
+          ];
+          let progress = 0;
+          let messageIndex = 0;
+          const interval = setInterval(() => {
+            progress += 20;
+            progressBar.style.width = progress + "%";
+            if (messageIndex < messages.length) {
+              statusText.textContent = messages[messageIndex];
+              messageIndex++;
+            }
+            if (progress >= 100) {
+              clearInterval(interval);
+              setTimeout(() => {
+                bootScreen.classList.add("hidden");
+              }, 500);
+            }
+          }, 400);
+        }
+
+        setupClock() {
+          const updateClock = () => {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, "0");
+            const minutes = String(now.getMinutes()).padStart(2, "0");
+            document.getElementById("clock").textContent = `${hours}:${minutes}`;
+          };
+          updateClock();
+          setInterval(updateClock, 30000);
+
+          // Game Over after 10 clicks on the clock
+          try {
+            if (!this._clockClickCount) this._clockClickCount = 0;
+            const clockEl = document.getElementById("clock");
+            if (clockEl && !this._clockClickBound) {
+              this._clockClickBound = true;
+              clockEl.addEventListener("click", () => {
+                if (this._clockClickCount < 0) return; // already triggered
+                this._clockClickCount++;
+                if (this._clockClickCount >= 10) {
+                  try {
+                    window.FarcadeSDK?.singlePlayer?.actions?.gameOver({ score: 0 });
+                  } catch (e) {
+                    console.warn("FarcadeSDK gameOver() from clock clicks failed", e);
+                  }
+                  const bsod = document.getElementById("bsod");
+                  if (bsod) bsod.classList.add("visible");
+                  this._clockClickCount = -1; // prevent re-trigger
+                }
+              });
+            }
+          } catch (e) {
+            console.warn("Clock click game over binding failed", e);
+          }
+        }
+
+        setupStickyNote() {
+          const stickyNote = document.getElementById("sticky-note");
+          const titleBar = stickyNote.querySelector(".sticky-titlebar");
+          let tokenCount = 0;
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("og-token-")) {
+              tokenCount++;
+            }
+          }
+          this.tokensFound = tokenCount;
+          const counter = document.getElementById("token-count");
+          if (counter) {
+            counter.textContent = this.tokensFound;
+          }
+          if (this.tokensFound >= 6) {
+            document.getElementById("task2").checked = true;
+          }
+          const clippy = document.getElementById("clippy");
+          const clippyMessage = document.getElementById("clippy-message");
+          const messages = [
+            '"Hi! I\'m Clippy, your assistant!"',
+            '"Need some help?"',
+            '"You seem curious..."',
+            '"Keep clicking..."',
+            '"Almost there!"',
+            '"One more time!"',
+            '"You found my secret! 🎉"',
+          ];
+          clippy.addEventListener("click", () => {
+            this.clippyClicks++;
+            if (this.clippyClicks < messages.length - 1) {
+              clippyMessage.textContent = messages[this.clippyClicks];
+              clippy.style.animation = "none";
+              setTimeout(() => {
+                clippy.style.animation = "clippy-bounce 0.5s ease-in-out";
+              }, 10);
+            } else if (this.clippyClicks === messages.length - 1) {
+              clippyMessage.textContent = messages[messages.length - 1];
+              this.foundToken("clippy-secret");
+            }
+          });
+          let isDragging = false;
+          let startX, startY, startLeft, startTop;
+          titleBar.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = stickyNote.offsetLeft;
+            startTop = stickyNote.offsetTop;
+          });
+          document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            stickyNote.style.left = startLeft + e.clientX - startX + "px";
+            stickyNote.style.top = startTop + e.clientY - startY + "px";
+            stickyNote.style.right = "auto";
+          });
+          document.addEventListener("mouseup", () => {
+            isDragging = false;
+          });
+        }
+
+        setupEventListeners() {
+          const startButton = document.getElementById("start-button");
+          const startMenu = document.getElementById("start-menu");
+          startButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isVisible = startMenu.classList.contains("visible");
+            if (isVisible) {
+              startMenu.classList.remove("visible");
+              startButton.classList.remove("active");
+            } else {
+              startMenu.classList.add("visible");
+              startButton.classList.add("active");
+            }
+          });
+          document.addEventListener("click", () => {
+            startMenu.classList.remove("visible");
+            startButton.classList.remove("active");
+          });
+          document.querySelectorAll(".start-menu-item").forEach((item) => {
+            item.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const app = item.dataset.app;
+              this.handleStartMenuItem(app);
+              startMenu.classList.remove("visible");
+              startButton.classList.remove("active");
+            });
+          });
+        }
+
+        createDesktopIcons() {
+          const desktop = document.getElementById("desktop");
+          const icons = [
+            { name: "My Computer", icon: "💻", x: 20, y: 20, app: "explorer" },
+            { name: "Recycle Bin", icon: "🗑️", x: 20, y: 100, app: "recycle" },
+            { name: "My Documents", icon: "📁", x: 20, y: 180, app: "documents" },
+            { name: "Internet Explorer", icon: "e", x: 20, y: 260, app: "ie" },
+            { name: "Paint", icon: "🎨", x: 20, y: 340, app: "paint" },
+            { name: "Email", icon: "📧", x: 20, y: 420, app: "email" },
+          ];
+          icons.forEach((iconData) => {
+            const icon = document.createElement("div");
+            icon.className = "desktop-icon";
+            icon.style.left = iconData.x + "px";
+            icon.style.top = iconData.y + "px";
+            icon.innerHTML = `
+              <div class="icon-image">${iconData.icon}</div>
+              <div class="icon-label">${iconData.name}</div>
+            `;
+            icon.addEventListener("dblclick", () => {
+              this.openApp(iconData.app);
+            });
+            desktop.appendChild(icon);
+          });
+        }
+
+        handleStartMenuItem(item) {
+          switch (item) {
+            case "shutdown":
+              this.showShutdownDialog();
+              break;
+            case "run":
+              this.showRunDialog();
+              break;
+            case "help":
+              this.openHelp();
+              break;
+            case "find":
+              this.openFindToken();
+              break;
+            default:
+              this.showNotImplemented();
+          }
+        }
+
+        openApp(app) {
+          switch (app) {
+            case "explorer":
+              this.openExplorer();
+              break;
+            case "ie":
+              this.openInternetExplorer();
+              break;
+            case "documents":
+              this.openDocuments();
+              break;
+            case "recycle":
+              this.openRecycleBin();
+              break;
+            case "paint":
+              this.openPaint();
+              break;
+            case "email":
+              this.openEmail();
+              break;
+            default:
+              this.showNotImplemented();
+          }
+        }
+
+        createWindow(options = {}) {
+          let {
+            title = "Window",
+            content = "",
+            width = 400,
+            height = 300,
+            x = 100 + Math.random() * 100,
+            y = 50 + Math.random() * 50,
+            menuBar = false,
+            statusBar = false,
+            isVirus = false,
+          } = options;
+          const maxWidth = window.innerWidth - 40;
+          const maxHeight = window.innerHeight - 100;
+          if (width > maxWidth) width = maxWidth;
+          if (height > maxHeight) height = maxHeight;
+          if (x + width > window.innerWidth - 20) {
+            x = window.innerWidth - width - 20;
+          }
+          if (y + height > window.innerHeight - 80) {
+            y = window.innerHeight - height - 80;
+          }
+          if (x < 10) x = 10;
+          if (y < 10) y = 10;
+          const windowId = "window-" + Date.now() + "-" + Math.random();
+          const windowElement = document.createElement("div");
+          windowElement.className = "window active" + (isVirus ? " virus-popup" : "");
+          windowElement.id = windowId;
+          windowElement.style.width = width + "px";
+          windowElement.style.height = height + "px";
+          windowElement.style.left = x + "px";
+          windowElement.style.top = y + "px";
+          windowElement.style.zIndex = ++this.zIndex;
+          let windowHTML = `
+            <div class="window-titlebar">
+              <span class="window-title">${title}</span>
+              <div class="window-controls">
+                <button class="window-button minimize">_</button>
+                <button class="window-button maximize">□</button>
+                <button class="window-button close">×</button>
+              </div>
+            </div>
+          `;
+          if (menuBar) {
+            windowHTML += `
+              <div class="window-menubar">
+                <span class="menu-item">File</span>
+                <span class="menu-item">Edit</span>
+                <span class="menu-item">View</span>
+                <span class="menu-item">Help</span>
+              </div>
+            `;
+          }
+          windowHTML += `<div class="window-content">${content}</div>`;
+          if (statusBar) {
+            windowHTML += `
+              <div class="window-statusbar">
+                <span class="statusbar-panel">Ready</span>
+              </div>
+            `;
+          }
+          windowElement.innerHTML = windowHTML;
+          document.getElementById("desktop").appendChild(windowElement);
+          const taskButton = document.createElement("button");
+          taskButton.className = "taskbar-button active";
+          taskButton.textContent = title;
+          taskButton.dataset.windowId = windowId;
+          document.querySelector(".taskbar-items").appendChild(taskButton);
+          this.setupWindowEvents(windowElement, taskButton, isVirus);
+          this.windows.set(windowId, {
+            element: windowElement,
+            taskButton: taskButton,
+            minimized: false,
+            isMaximized: false,
+            isVirus: isVirus,
+            originalSize: { width, height, x, y },
+          });
+          this.setActiveWindow(windowId);
+          return windowElement;
+        }
+
+        setupWindowEvents(windowElement, taskButton, isVirus = false) {
+          const windowId = windowElement.id;
+          const titleBar = windowElement.querySelector(".window-titlebar");
+          const closeBtn = windowElement.querySelector(".window-button.close");
+          const minimizeBtn = windowElement.querySelector(".window-button.minimize");
+          const maximizeBtn = windowElement.querySelector(".window-button.maximize");
+          let isDragging = false;
+          let startX, startY, startLeft, startTop;
+          titleBar.addEventListener("mousedown", (e) => {
+            if (e.target.classList.contains("window-button")) return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = windowElement.offsetLeft;
+            startTop = windowElement.offsetTop;
+            this.setActiveWindow(windowId);
+          });
+          document.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            windowElement.style.left = startLeft + e.clientX - startX + "px";
+            windowElement.style.top = startTop + e.clientY - startY + "px";
+          });
+          document.addEventListener("mouseup", () => {
+            isDragging = false;
+          });
+          closeBtn.addEventListener("click", () => {
+            if (isVirus) {
+              this.closeVirusWindow(windowId);
+            } else {
+              this.closeWindow(windowId);
+            }
+          });
+          minimizeBtn.addEventListener("click", () => {
+            this.minimizeWindow(windowId);
+          });
+          maximizeBtn.addEventListener("click", () => {
+            this.maximizeWindow(windowId);
+          });
+          taskButton.addEventListener("click", () => {
+            const data = this.windows.get(windowId);
+            if (data.minimized) {
+              this.restoreWindow(windowId);
+            } else {
+              this.setActiveWindow(windowId);
+            }
+          });
+          windowElement.addEventListener("mousedown", () => {
+            this.setActiveWindow(windowId);
+          });
+        }
+
+        setActiveWindow(windowId) {
+          this.windows.forEach((data, id) => {
+            data.element.classList.remove("active");
+            data.element.classList.add("inactive");
+            data.taskButton.classList.remove("active");
+          });
+          const windowData = this.windows.get(windowId);
+          if (windowData) {
+            windowData.element.classList.add("active");
+            windowData.element.classList.remove("inactive");
+            windowData.element.style.zIndex = ++this.zIndex;
+            windowData.taskButton.classList.add("active");
+            this.activeWindow = windowId;
+          }
+        }
+
+        closeWindow(windowId) {
+          const data = this.windows.get(windowId);
+          if (data) {
+            if (data.minimized) {
+              this.minimizedWindowCount--;
+            }
+            data.element.remove();
+            data.taskButton.remove();
+            this.windows.delete(windowId);
+          }
+        }
+
+        minimizeWindow(windowId) {
+          const data = this.windows.get(windowId);
+          if (data) {
+            data.element.style.display = "none";
+            if (!data.minimized) {
+              data.minimized = true;
+              this.minimizedWindowCount++;
+              if (this.minimizedWindowCount >= 5 && !localStorage.getItem("og-token-overload")) {
+                setTimeout(() => {
+                  this.triggerBugOverload();
+                }, 500);
+              }
+            }
+            data.taskButton.classList.remove("active");
+          }
+        }
+
+        restoreWindow(windowId) {
+          const data = this.windows.get(windowId);
+          if (data) {
+            data.element.style.display = "flex";
+            if (data.minimized) {
+              data.minimized = false;
+              this.minimizedWindowCount--;
+            }
+            this.setActiveWindow(windowId);
+          }
+        }
+
+        maximizeWindow(windowId) {
+          const data = this.windows.get(windowId);
+          if (!data) return;
+          const windowElement = data.element;
+          if (data.isMaximized) {
+            windowElement.style.width = data.originalSize.width + "px";
+            windowElement.style.height = data.originalSize.height + "px";
+            windowElement.style.left = data.originalSize.x + "px";
+            windowElement.style.top = data.originalSize.y + "px";
+            data.isMaximized = false;
+          } else {
+            data.originalSize = {
+              width: windowElement.offsetWidth,
+              height: windowElement.offsetHeight,
+              x: windowElement.offsetLeft,
+              y: windowElement.offsetTop,
+            };
+            windowElement.style.width = window.innerWidth - 4 + "px";
+            windowElement.style.height = window.innerHeight - 32 + "px";
+            windowElement.style.left = "0px";
+            windowElement.style.top = "0px";
+            data.isMaximized = true;
+          }
+        }
+
+        closeVirusWindow(windowId) {
+          this.closeWindow(windowId);
+          this.virusPopupCount--;
+          if (this.virusPopupCount < this.maxVirusPopups) {
+            setTimeout(() => {
+              this.openVirusPopup();
+            }, 100);
+          }
+        }
+
+        openVirusPopup() {
+          this.virusPopupCount++;
+          const messages = [
+            "⚠️ VIRUS DETECTED!",
+            "🚨 SYSTEM ERROR!",
+            "💀 YOUR FILES ARE AT RISK!",
+            "⚡ CRITICAL WARNING!",
+            "🔥 DANGER! DANGER!",
+            "👾 INFECTED!",
+            "💣 MALWARE ALERT!",
+            "🦠 TROJAN DETECTED!",
+            "⛔ ACCESS DENIED!",
+            "🎯 YOU'VE BEEN HACKED!",
+          ];
+          const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+          const content = `
+            <div style="padding: 16px; text-align: center; background: #ff0000; color: #ffffff; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+              <div style="font-size: 40px; margin-bottom: 8px;">⚠️</div>
+              <h2 style="margin-bottom: 8px; animation: blink 0.5s infinite; font-size: 16px;">${randomMsg}</h2>
+              <p style="margin-bottom: 12px; font-size: 12px;">Close this window to continue...</p>
+              <p style="font-size: 9px; opacity: 0.8;">(Popup ${this.virusPopupCount}/${this.maxVirusPopups})</p>
+            </div>
+          `;
+          // Taille de la popup
+          const popupWidth = 320;
+          const popupHeight = 220;
+          // Calculer position aléatoire mais toujours visible
+          const maxX = Math.max(10, window.innerWidth - popupWidth - 20);
+          const maxY = Math.max(10, window.innerHeight - popupHeight - 80);
+          const randomX = Math.max(10, Math.random() * maxX);
+          const randomY = Math.max(10, Math.random() * maxY);
+
+          this.createWindow({
+            title: "⚠️ WARNING ⚠️",
+            content,
+            width: popupWidth,
+            height: popupHeight,
+            x: randomX,
+            y: randomY,
+            isVirus: true,
+          });
+        }
+
+        triggerBugOverload() {
+          this.foundToken("overload");
+          const content = `
+            <div style="padding: 24px; text-align: center; background: linear-gradient(135deg, #ff0000 0%, #ff6600 100%);">
+              <div style="font-size: 64px; margin-bottom: 16px;">🔥</div>
+              <h2 style="color: #ffffff; font-size: 24px; margin-bottom: 12px;">BUG OVERLOADED!</h2>
+              <p style="color: #ffffff; margin-bottom: 16px;">Too many minimized windows!<br>System needs to reboot...</p>
+              <div style="background: rgba(0,0,0,0.3); padding: 12px; margin: 16px 0; border-radius: 4px;">
+                <p style="color: #ffff00; font-size: 14px;">🎉 SECRET DISCOVERED!<br><img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 20px; height: 20px; vertical-align: middle; image-rendering: pixelated;"> Token Awarded!</p>
+              </div>
+              <button class="win95" onclick="location.reload()" style="background: #ffff00; font-weight: bold;">REBOOT NOW</button>
+            </div>
+          `;
+          this.createWindow({
+            title: "⚠️ System Overload",
+            content,
+            width: 350,
+            height: 320,
+            x: window.innerWidth / 2 - 175,
+            y: window.innerHeight / 2 - 160,
+          });
+        }
+
+        openEmail() {
+          const emails = [
+            {
+              id: 1,
+              from: "Microsoft Update",
+              subject: "Security Update Available",
+              body: "Dear user,\n\nA new security update is available for your system. Please install it at your earliest convenience.\n\nBest regards,\nMicrosoft Team",
+              unread: false,
+              date: "11/10/2025",
+              visible: true,
+            },
+            {
+              id: 2,
+              from: "Newsletter",
+              subject: "Weekly Gaming News",
+              body: "Hello!\n\nCheck out the latest gaming news this week:\n- New releases\n- Gaming tips\n- Community events\n\nStay tuned!",
+              unread: false,
+              date: "11/09/2025",
+              visible: true,
+            },
+            {
+              id: 3,
+              from: "Unknown Sender",
+              subject: "Binary Message",
+              body: "01001001 00100000 01000001 01001101 00100000 01000001 01001100 01001001 01010110 01000101",
+              unread: this.tokensFound >= 2,
+              date: "11/11/2025",
+              isBinary: true,
+              visible: this.tokensFound >= 2,
+            },
+            {
+              id: 4,
+              from: "GAM3RS Rewards",
+              subject: "🎁 Claim Your Reward!",
+              body: "Congratulations!\n\nYou have earned a special reward! This is your token for finding 4 secrets.\n\nKeep exploring G3.OS!",
+              unread: this.tokensFound >= 4,
+              date: "11/12/2025",
+              isReward: true,
+              visible: this.tokensFound >= 4,
+            },
+          ];
+          const visibleEmails = emails.filter((e) => e.visible);
+          const emailListHTML = visibleEmails
+            .map(
+              (email) => `
+            <div class="email-item ${email.unread ? "unread" : ""}" data-email-id="${email.id}">
+              <span class="email-icon">${email.unread ? "📩" : "📧"}</span>
+              <div class="email-subject">
+                <strong>${email.from}</strong><br>
+                <span style="font-size: 10px;">${email.subject}</span>
+              </div>
+              <span style="font-size: 9px; color: #666;">${email.date}</span>
+            </div>
+          `,
+            )
+            .join("");
+          const content = `
+            <div style="display: flex; flex-direction: column; height: 100%;">
+              <div style="border-bottom: 2px solid #808080; padding: 8px; background: #c0c0c0;">
+                <strong>📬 Inbox (${visibleEmails.filter((e) => e.unread).length} unread)</strong>
+              </div>
+              <div style="flex: 1; overflow-y: auto; background: #ffffff;">
+                <ul class="email-list">${emailListHTML}</ul>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Outlook Express",
+            content,
+            width: 450,
+            height: 400,
+            x: 100,
+            y: 80,
+            menuBar: true,
+            statusBar: true,
+          });
+          setTimeout(() => {
+            win.querySelectorAll(".email-item").forEach((item) => {
+              item.addEventListener("dblclick", () => {
+                const emailId = parseInt(item.dataset.emailId);
+                const email = visibleEmails.find((e) => e.id === emailId);
+                this.openEmailContent(email);
+              });
+            });
+          }, 100);
+        }
+
+        openEmailContent(email) {
+          let bodyContent = email.body;
+          if (email.isBinary) {
+            const decoded = email.body
+              .split(" ")
+              .map((b) => String.fromCharCode(parseInt(b, 2)))
+              .join("");
+            bodyContent = `
+              <div style="font-family: 'Courier New', monospace;">
+                <div style="color: #00ff00; margin-bottom: 10px;">${email.body}</div>
+                <div style="padding: 10px; background: #000; color: #00ff88; border: 1px solid #00ff88;">
+                  Decoded: <strong>${decoded}</strong>
+                </div>
+              </div>
+            `;
+          }
+          let actionButton = "";
+          let buttonHTML = "";
+          if (email.isReward) {
+            buttonHTML =
+              '<div style="padding: 8px; text-align: center; border-top: 1px solid #c0c0c0;"><button class="win95 claim-reward-btn" style="background: #00ff88; font-weight: bold; padding: 6px 16px;">🎁 CLAIM YOUR TOKEN!</button></div>';
+          }
+          const content = `
+            <div style="height: 100%; display: flex; flex-direction: column;">
+              <div style="padding: 12px; padding-bottom: 8px; border-bottom: 1px solid #c0c0c0;">
+                <strong>From:</strong> ${email.from}<br>
+                <strong>Subject:</strong> ${email.subject}<br>
+                <strong>Date:</strong> ${email.date}
+              </div>
+              <div style="flex: 1; overflow-y: auto; padding: 12px; white-space: pre-wrap; font-size: 11px; line-height: 1.6;">${bodyContent}</div>
+              ${buttonHTML}
+            </div>
+          `;
+          const emailWidth = Math.min(420, window.innerWidth - 40);
+          const emailHeight = Math.min(350, window.innerHeight - 100);
+          const emailWin = this.createWindow({
+            title: `Email - ${email.subject}`,
+            content,
+            width: emailWidth,
+            height: emailHeight,
+            x: Math.max(10, (window.innerWidth - emailWidth) / 2),
+            y: Math.max(10, (window.innerHeight - emailHeight) / 2),
+          });
+          if (email.isReward) {
+            setTimeout(() => {
+              const claimBtn = emailWin.querySelector(".claim-reward-btn");
+              if (claimBtn) {
+                claimBtn.addEventListener("click", () => {
+                  this.foundToken("email-reward");
+                  claimBtn.disabled = true;
+                  claimBtn.textContent = "✅ TOKEN CLAIMED!";
+                  claimBtn.style.background = "#808080";
+                });
+              }
+            }, 100);
+          }
+        }
+
+        foundToken(tokenId) {
+          const storageKey = "og-token-" + tokenId;
+          if (localStorage.getItem(storageKey)) {
+            return;
+          }
+          localStorage.setItem(storageKey, "true");
+          this.tokensFound++;
+          const counter = document.getElementById("token-count");
+          if (counter) {
+            counter.textContent = this.tokensFound;
+          }
+          const content = `
+            <div style="padding: 16px; text-align: center;">
+              <div style="margin-bottom: 10px;">
+                <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 64px; height: 64px; image-rendering: pixelated;">
+              </div>
+              <h3 style="color: #00ff88; margin-bottom: 8px;"><img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 20px; height: 20px; vertical-align: middle; image-rendering: pixelated;"> Token Found!</h3>
+              <p>You found a hidden token!</p>
+              <p style="margin-top: 8px;"><strong>${this.tokensFound}/6</strong> tokens collected</p>
+              <br>
+              <button class="win95 close-window-btn">OK</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "🎮 Achievement!",
+            content,
+            width: 300,
+            height: 220,
+            x: window.innerWidth / 2 - 150,
+            y: window.innerHeight / 2 - 110,
+          });
+          setTimeout(() => {
+            const btn = win.querySelector(".close-window-btn");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 50);
+          if (this.tokensFound >= 6) {
+            setTimeout(() => {
+              document.getElementById("task2").checked = true;
+              this.unlockSnake();
+            }, 1000);
+          }
+        }
+
+        unlockSnake() {
+          const content = `
+            <div style="padding: 24px; text-align: center;">
+              <div style="font-size: 64px; margin-bottom: 16px;">🎉</div>
+              <h2 style="color: #00ff88; margin-bottom: 12px;">CONGRATULATIONS!</h2>
+              <p style="margin-bottom: 8px;">You found all 6 tokens!</p>
+              <p style="font-weight: bold; margin-bottom: 20px;">🐍 SNAKE GAME UNLOCKED! 🐍</p>
+              <p style="font-size: 10px; color: #666; margin-bottom: 16px;">A new icon has appeared on your desktop!</p>
+              <button class="win95 close-window-btn" style="background: #00ff88; font-weight: bold;">AWESOME!</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "🏆 All Tokens Found!",
+            content,
+            width: 350,
+            height: 280,
+            x: window.innerWidth / 2 - 175,
+            y: window.innerHeight / 2 - 140,
+          });
+          setTimeout(() => {
+            const btn = win.querySelector(".close-window-btn");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 50);
+          this.addSnakeIcon();
+          const gameName = document.getElementById("game-name");
+          if (gameName) {
+            gameName.textContent = "🐍 Snake Game";
+            gameName.style.color = "#00ff88";
+            gameName.style.fontWeight = "bold";
+          }
+          localStorage.setItem("snake-unlocked", "true");
+        }
+
+        addSnakeIcon() {
+          const desktop = document.getElementById("desktop");
+          const icon = document.createElement("div");
+          icon.className = "desktop-icon";
+          icon.style.left = "110px";
+          icon.style.top = "20px";
+          icon.innerHTML = `
+            <div class="icon-image">🐍</div>
+            <div class="icon-label">Snake Game</div>
+          `;
+          icon.addEventListener("dblclick", () => {
+            this.openSnakeGame();
+          });
+          desktop.appendChild(icon);
+        }
+
+        openSnakeGame() {
+          const content = `
+            <div style="background: #000000; height: 100%; display: flex; flex-direction: column;">
+              <div style="background: #c0c0c0; padding: 8px; text-align: center; font-weight: bold; border-bottom: 2px solid #808080; font-size: 10px;">
+                <span>Score: <span id="snake-score">0</span></span>
+                <span style="margin-left: 20px;">High: <span id="snake-high">0</span></span>
+              </div>
+              <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 8px; overflow: hidden;">
+                <canvas id="snake-canvas" style="display: block; background: #000000; max-width: 100%; max-height: 100%; touch-action: none;"></canvas>
+              </div>
+              <div style="background: #c0c0c0; padding: 6px; text-align: center; font-size: 9px; border-top: 2px solid #808080; line-height: 1.3;">
+                <div style="display: none;" id="touch-controls">
+                  <div style="display: flex; justify-content: center; gap: 4px; margin-bottom: 4px;">
+                    <button class="win95" id="btn-up" style="padding: 8px 16px; min-width: 50px;">▲</button>
+                  </div>
+                  <div style="display: flex; justify-content: center; gap: 4px;">
+                    <button class="win95" id="btn-left" style="padding: 8px 16px; min-width: 50px;">◀</button>
+                    <button class="win95" id="btn-down" style="padding: 8px 16px; min-width: 50px;">▼</button>
+                    <button class="win95" id="btn-right" style="padding: 8px 16px; min-width: 50px;">▶</button>
+                  </div>
+                </div>
+                <div id="kb-text">Arrow Keys • Eat tokens to grow!</div>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Snake Game - G3.OS",
+            content,
+            width: 420,
+            height: 500,
+            x: Math.max(10, window.innerWidth / 2 - 210),
+            y: 50,
+          });
+          setTimeout(() => {
+            this.initSnake(win.id);
+          }, 100);
+        }
+
+        initSnake(windowId) {
+          const canvas = document.getElementById("snake-canvas");
+          if (!canvas) return;
+
+          // Rendre le canvas responsive
+          const container = canvas.parentElement;
+          const maxSize = Math.min(container.clientWidth - 16, container.clientHeight - 16, 400);
+          canvas.width = maxSize;
+          canvas.height = maxSize;
+
+          const ctx = canvas.getContext("2d");
+          const tileCount = 20;
+          const gridSize = Math.floor(maxSize / tileCount);
+
+          let snake = [{ x: 10, y: 10 }];
+          let food = { x: 15, y: 15 };
+          let dx = 0;
+          let dy = 0;
+          let score = 0;
+          let gameLoop = null;
+          let highScore = parseInt(localStorage.getItem("snake-high-score") || "0");
+          document.getElementById("snake-high").textContent = highScore;
+
+          const keyHandler = (e) => {
+            if (!this.windows.has(windowId)) {
+              document.removeEventListener("keydown", keyHandler);
+              if (gameLoop) clearInterval(gameLoop);
+              return;
+            }
+            if (e.key === "ArrowUp" && dy === 0) {
+              dx = 0;
+              dy = -1;
+              e.preventDefault();
+            } else if (e.key === "ArrowDown" && dy === 0) {
+              dx = 0;
+              dy = 1;
+              e.preventDefault();
+            } else if (e.key === "ArrowLeft" && dx === 0) {
+              dx = -1;
+              dy = 0;
+              e.preventDefault();
+            } else if (e.key === "ArrowRight" && dx === 0) {
+              dx = 1;
+              dy = 0;
+              e.preventDefault();
+            }
+          };
+          document.addEventListener("keydown", keyHandler);
+
+          // Ajouter contrôles tactiles sur mobile
+          const isMobile = window.innerWidth <= 768 || "ontouchstart" in window;
+          if (isMobile) {
+            const touchControls = document.getElementById("touch-controls");
+            const kbText = document.getElementById("kb-text");
+            if (touchControls) touchControls.style.display = "block";
+            if (kbText) kbText.style.display = "none";
+
+            const btnUp = document.getElementById("btn-up");
+            const btnDown = document.getElementById("btn-down");
+            const btnLeft = document.getElementById("btn-left");
+            const btnRight = document.getElementById("btn-right");
+
+            if (btnUp)
+              btnUp.addEventListener("click", () => {
+                if (dy === 0) {
+                  dx = 0;
+                  dy = -1;
+                }
+              });
+            if (btnDown)
+              btnDown.addEventListener("click", () => {
+                if (dy === 0) {
+                  dx = 0;
+                  dy = 1;
+                }
+              });
+            if (btnLeft)
+              btnLeft.addEventListener("click", () => {
+                if (dx === 0) {
+                  dx = -1;
+                  dy = 0;
+                }
+              });
+            if (btnRight)
+              btnRight.addEventListener("click", () => {
+                if (dx === 0) {
+                  dx = 1;
+                  dy = 0;
+                }
+              });
+          }
+
+          const draw = () => {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = "#111111";
+            for (let i = 0; i <= tileCount; i++) {
+              ctx.beginPath();
+              ctx.moveTo(i * gridSize, 0);
+              ctx.lineTo(i * gridSize, canvas.height);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(0, i * gridSize);
+              ctx.lineTo(canvas.width, i * gridSize);
+              ctx.stroke();
+            }
+            ctx.fillStyle = "#ffff00";
+            ctx.fillRect(food.x * gridSize + 4, food.y * gridSize + 4, gridSize - 8, gridSize - 8);
+            snake.forEach((segment, index) => {
+              if (index === 0) {
+                ctx.fillStyle = "#00ff88";
+              } else {
+                ctx.fillStyle = "#00aa66";
+              }
+              ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+            });
+          };
+          const update = () => {
+            if (dx === 0 && dy === 0) return;
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+              gameOver();
+              return;
+            }
+            if (snake.some((segment) => segment.x === head.x && segment.y === head.y)) {
+              gameOver();
+              return;
+            }
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+              score += 1;
+              document.getElementById("snake-score").textContent = score;
+              if (score > highScore) {
+                highScore = score;
+                localStorage.setItem("snake-high-score", highScore);
+                document.getElementById("snake-high").textContent = highScore;
+              }
+              if (score >= 30 && !localStorage.getItem("task3-completed")) {
+                localStorage.setItem("task3-completed", "true");
+                const task3 = document.getElementById("task3");
+                if (task3) task3.checked = true;
+                if (gameLoop) clearInterval(gameLoop);
+                document.removeEventListener("keydown", keyHandler);
+                setTimeout(() => {
+                  this.showSnakeWin(windowId, score);
+                }, 300);
+                return;
+              }
+              food = {
+                x: Math.floor(Math.random() * tileCount),
+                y: Math.floor(Math.random() * tileCount),
+              };
+            } else {
+              snake.pop();
+            }
+          };
+          const gameOver = () => {
+            if (gameLoop) clearInterval(gameLoop);
+            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "30px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
+            ctx.font = "16px Arial";
+            ctx.fillText("Score: " + score, canvas.width / 2, canvas.height / 2 + 20);
+            ctx.fillText("Press R to restart", canvas.width / 2, canvas.height / 2 + 50);
+            const restartHandler = (e) => {
+              if (e.key === "r" || e.key === "R") {
+                document.removeEventListener("keydown", restartHandler);
+                this.closeWindow(windowId);
+                setTimeout(() => this.openSnakeGame(), 100);
+              }
+            };
+            document.addEventListener("keydown", restartHandler);
+          };
+          gameLoop = setInterval(() => {
+            update();
+            draw();
+          }, 150);
+          draw();
+        }
+
+        showSnakeWin(windowId, score) {
+          // Affiche un écran de victoire spécifique au Snake
+          const content = `
+            <div style="padding: 28px; text-align: center; background: linear-gradient(135deg, #0b132b 0%, #1c2541 100%); color: #ffffff;">
+              <div style="font-size: 72px; margin-bottom: 12px;">🏆</div>
+              <h2 style="color: #00ff88; font-size: 28px; margin-bottom: 8px; text-shadow: 0 0 10px #00ff88;">VICTOIRE !</h2>
+              <p style="font-size: 14px; opacity: 0.9;">Tu as atteint un score de <strong>${score}</strong> sur Snake.</p>
+              <div style="background: rgba(0,255,136,0.1); border: 2px solid #00ff88; padding: 14px; margin: 16px 0; border-radius: 6px; font-size: 12px;">
+                Objectif validé: Faire 30 points sur Snake ✅
+              </div>
+              <div style="margin-top: 12px; display:flex; gap:8px; justify-content:center; flex-wrap: wrap;">
+                <button class="win95" id="snake-replay-btn" style="background:#00ff88; font-weight: bold; padding: 8px 18px;">REJOUER</button>
+                <button class="win95" id="snake-close-btn" style="padding: 8px 18px;">FERMER</button>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "🏆 Snake - Victoire",
+            content,
+            width: 360,
+            height: 300,
+            x: Math.max(10, window.innerWidth / 2 - 180),
+            y: Math.max(10, window.innerHeight / 2 - 150),
+          });
+          setTimeout(() => {
+            const replay = win.querySelector("#snake-replay-btn");
+            const close = win.querySelector("#snake-close-btn");
+            if (replay) {
+              replay.addEventListener("click", () => {
+                this.closeWindow(win.id);
+                if (windowId) this.closeWindow(windowId);
+                setTimeout(() => this.openSnakeGame(), 100);
+              });
+            }
+            if (close) {
+              close.addEventListener("click", () => {
+                this.closeWindow(win.id);
+                if (windowId) this.closeWindow(windowId);
+              });
+            }
+          }, 80);
+        }
+
+        showVictoryScreen() {
+          this.windows.forEach((data, id) => {
+            this.closeWindow(id);
+          });
+          const content = `
+            <div style="padding: 40px; text-align: center; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+              <div style="font-size: 80px; margin-bottom: 20px;">🏆</div>
+              <h1 style="color: #00ff88; font-size: 36px; margin-bottom: 16px; text-shadow: 0 0 10px #00ff88;">VICTORY!</h1>
+              <h2 style="color: #ffffff; font-size: 24px; margin-bottom: 20px;">G3.OS MASTER</h2>
+              <div style="background: rgba(0,255,136,0.1); border: 2px solid #00ff88; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <p style="color: #ffffff; font-size: 16px; margin-bottom: 12px;">🎮 You completed all objectives!</p>
+                <div style="display: flex; justify-content: center; gap: 30px; margin-top: 20px; flex-wrap: wrap;">
+                  <div><div style="color: #00ff88; font-size: 24px; font-weight: bold;">✓</div><div style="color: #888; font-size: 12px;">Wallpaper</div></div>
+                  <div><div style="color: #00ff88; font-size: 24px; font-weight: bold;">6/6</div><div style="color: #888; font-size: 12px;">Tokens</div></div>
+                  <div><div style="color: #00ff88; font-size: 24px; font-weight: bold;">✓</div><div style="color: #888; font-size: 12px;">Minesweeper</div></div>
+                  <div><div style="color: #00ff88; font-size: 24px; font-weight: bold;">30+</div><div style="color: #888; font-size: 12px;">Score</div></div>
+                </div>
+              </div>
+              <p style="color: #ffffff; margin: 20px 0; font-size: 14px;">Thank you for playing G3.OS!<br>Visit <span style="color: #00ff88; font-weight: bold;">gam3s.gg</span> for more gaming adventures!</p>
+              <div style="margin-top: 30px;">
+                <button class="win95" style="background: #00ff88; font-weight: bold; padding: 8px 24px; font-size: 14px;" onclick="location.reload()">PLAY AGAIN</button>
+              </div>
+            </div>
+          `;
+          this.createWindow({
+            title: "🎉 Congratulations!",
+            content,
+            width: 500,
+            height: 600,
+            x: Math.max(10, window.innerWidth / 2 - 250),
+            y: Math.max(10, window.innerHeight / 2 - 300),
+          });
+        }
+
+        shutdown() {
+          document.body.innerHTML = `
+            <div style="background: #000000; color: #FF8800; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Lucida Console', monospace; font-size: 20px;">
+              It's now safe to turn off your computer.
+            </div>
+          `;
+        }
+
+        openExplorer() {
+          const content = `
+            <div style="display: flex; height: 100%;">
+              <div style="width: 150px; border-right: 1px solid #808080; padding: 8px; overflow-y: auto;">
+                <div style="margin-bottom: 8px;">📁 Desktop</div>
+                <div style="margin-bottom: 8px;">💻 My Computer</div>
+                <div style="margin-bottom: 8px; cursor: pointer;" class="floppy-item">💾 3½ Floppy (A:)</div>
+                <div style="margin-bottom: 8px;">💿 (C:)</div>
+                <div style="margin-bottom: 8px; cursor: pointer;" class="cdrom-item">📀 (D:)</div>
+                <div style="margin-bottom: 8px;">🖨️ Printers</div>
+                <div style="margin-bottom: 8px;">⚙️ Control Panel</div>
+              </div>
+              <div style="flex: 1; padding: 8px; overflow-y: auto;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, 80px); gap: 16px;">
+                  <div style="text-align: center; cursor: pointer;" class="floppy-item"><div style="font-size: 32px;">💾</div><div style="font-size: 10px;">3½ Floppy (A:)</div></div>
+                  <div style="text-align: center;"><div style="font-size: 32px;">💿</div><div style="font-size: 10px;">Local Disk (C:)</div></div>
+                  <div style="text-align: center; cursor: pointer;" class="cdrom-item"><div style="font-size: 32px;">📀</div><div style="font-size: 10px;">CD-ROM (D:)</div></div>
+                  <div style="text-align: center;"><div style="font-size: 32px;">🖨️</div><div style="font-size: 10px;">Printers</div></div>
+                  <div style="text-align: center;"><div style="font-size: 32px;">⚙️</div><div style="font-size: 10px;">Control Panel</div></div>
+                  <div style="text-align: center;"><div style="font-size: 32px;">☎️</div><div style="font-size: 10px;">Dial-Up</div></div>
+                </div>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "My Computer",
+            content,
+            width: 500,
+            height: 350,
+            x: 80,
+            y: 60,
+            menuBar: true,
+            statusBar: true,
+          });
+          const helpMenu = win.querySelectorAll(".menu-item")[3];
+          if (helpMenu) {
+            helpMenu.addEventListener("click", () => {
+              this.foundToken("my-computer-help");
+            });
+          }
+          setTimeout(() => {
+            const floppyItems = win.querySelectorAll(".floppy-item");
+            floppyItems.forEach((item) => {
+              item.addEventListener("dblclick", () => {
+                this.openFloppyDisk();
+              });
+            });
+            const cdromItems = win.querySelectorAll(".cdrom-item");
+            cdromItems.forEach((item) => {
+              item.addEventListener("dblclick", () => {
+                this.openCDROM();
+              });
+            });
+          }, 100);
+        }
+
+        openInternetExplorer() {
+          const content = `
+            <div style="border: 2px solid #808080; border-style: inset; padding: 2px; margin-bottom: 4px;">
+              <label>Address: </label>
+              <input type="text" class="win95" style="width: calc(100% - 60px);" value="https://remix.gg/g/gam3rs-character-creator">
+            </div>
+            <div style="overflow: hidden; height: calc(100% - 26px); background: #ffffff; padding: 0; margin: 0;">
+              <iframe src="https://remix.gg/g/d699e966-3548-47a8-89e6-9ea282a9427b?embed=1" style="width: 100%; height: 100%; border: none;" allow="gamepad; fullscreen" loading="lazy"></iframe>
+            </div>
+          `;
+          const maxWidth = window.innerWidth - 100;
+          const maxHeight = window.innerHeight - 150;
+          const windowWidth = Math.min(650, maxWidth);
+          const windowHeight = Math.min(900, maxHeight);
+          this.createWindow({
+            title: "Internet Explorer - GAM3RS Character Creator",
+            content,
+            width: windowWidth,
+            height: windowHeight,
+            x: 50,
+            y: 30,
+            menuBar: true,
+            statusBar: true,
+          });
+        }
+
+        openDocuments() {
+          const wallpapers = [
+            {
+              id: 1,
+              url: "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/Capture%20d%27%C3%A9cran%202025-11-12%20080018-g34QCZIG9BkuPGPRQVpXE2X2wwZjPO.webp?7q79",
+              name: "OG1.bmp",
+            },
+            {
+              id: 2,
+              url: "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/Capture%20d%27%C3%A9cran%202025-11-12%20080030-tDd59jMvYuCVl6yK8l8h8xQcwB5qXd.webp?e2tD",
+              name: "OG2.bmp",
+            },
+            {
+              id: 3,
+              url: "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/Capture%20d%27%C3%A9cran%202025-11-12%20080058-PcYXy3MhC47uf4cOn7SGZoMDT5KyQT.webp?jA97",
+              name: "OG3.bmp",
+            },
+            {
+              id: 4,
+              url: "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/Capture%20d%27%C3%A9cran%202025-11-12%20080110-fVYKxZF8rvmhw4meBiI7OsMJWqklui.webp?5R8W",
+              name: "OG4.bmp",
+            },
+            {
+              id: 5,
+              url: "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/Capture%20d%27%C3%A9cran%202025-11-12%20080121-o79eyb8YiwHleKq3bUC5UnqrgVjOf2.webp?QiCI",
+              name: "OG5.bmp",
+            },
+            {
+              id: 6,
+              url: "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/Capture%20d%27%C3%A9cran%202025-11-12%20080133-Leh75w4zHMdT3pWCC8Xu21Qt0mjRjZ.webp?a8A4",
+              name: "OG6.bmp",
+            },
+          ];
+          const wallpaperHTML = wallpapers
+            .map(
+              (wp) => `
+            <div style="text-align: center; cursor: pointer;" class="wallpaper-item" data-id="${wp.id}" data-url="${wp.url}">
+              <div style="width: 80px; height: 60px; border: 2px solid #808080; margin: 0 auto 4px; overflow: hidden; background: #000;">
+                <img src="${wp.url}" style="width: 100%; height: 100%; object-fit: cover;">
+              </div>
+              <div style="font-size: 10px;">${wp.name}</div>
+            </div>
+          `,
+            )
+            .join("");
+          const content = `
+            <div style="padding: 8px;">
+              <div style="margin-bottom: 12px; font-weight: bold;">My Documents - Wallpapers</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, 100px); gap: 16px;">
+                ${wallpaperHTML}
+              </div>
+              <div style="margin-top: 16px; padding-top: 8px; border-top: 1px solid #808080; font-size: 10px; color: #666;">
+                Double-click a wallpaper to set it as your desktop background
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "My Documents",
+            content,
+            width: 380,
+            height: 320,
+            x: 120,
+            y: 80,
+            menuBar: true,
+            statusBar: true,
+          });
+          setTimeout(() => {
+            const items = win.querySelectorAll(".wallpaper-item");
+            items.forEach((item) => {
+              item.addEventListener("dblclick", () => {
+                const url = item.dataset.url;
+                const id = item.dataset.id;
+                this.setWallpaper(url, id);
+              });
+            });
+          }, 100);
+        }
+
+        setWallpaper(url, id) {
+          const desktop = document.getElementById("desktop");
+          desktop.style.backgroundImage = `url('${url}')`;
+          desktop.style.backgroundSize = "cover";
+          desktop.style.backgroundPosition = "center";
+          desktop.style.backgroundRepeat = "no-repeat";
+          const isFirstWallpaper = !localStorage.getItem("og-wallpaper");
+          localStorage.setItem("og-wallpaper", url);
+          localStorage.setItem("og-wallpaper-id", id);
+          const task1 = document.getElementById("task1");
+          if (task1 && !task1.checked) {
+            task1.checked = true;
+            if (isFirstWallpaper) {
+              setTimeout(() => {
+                this.foundToken("wallpaper-chosen");
+              }, 500);
+            }
+            const content = `
+              <div style="padding: 16px; text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                <h3 style="margin-bottom: 8px;">Task Completed!</h3>
+                <p>You have chosen a wallpaper!</p>
+                <br>
+                <button class="win95 close-window-btn">OK</button>
+              </div>
+            `;
+            const win = this.createWindow({
+              title: "Success",
+              content,
+              width: 280,
+              height: 180,
+              x: window.innerWidth / 2 - 140,
+              y: window.innerHeight / 2 - 90,
+            });
+            setTimeout(() => {
+              const btn = win.querySelector(".close-window-btn");
+              if (btn) {
+                btn.addEventListener("click", () => {
+                  this.closeWindow(win.id);
+                });
+              }
+            }, 50);
+          }
+        }
+
+        loadSavedWallpaper() {
+          const savedWallpaper = localStorage.getItem("og-wallpaper");
+          if (savedWallpaper) {
+            const desktop = document.getElementById("desktop");
+            desktop.style.backgroundImage = `url('${savedWallpaper}')`;
+            desktop.style.backgroundSize = "cover";
+            desktop.style.backgroundPosition = "center";
+            desktop.style.backgroundRepeat = "no-repeat";
+            const task1 = document.getElementById("task1");
+            if (task1) {
+              task1.checked = true;
+            }
+          }
+        }
+
+        openRecycleBin() {
+          const trashFiles = [];
+          const fileTypes = [
+            { icon: "📄", ext: ".txt" },
+            { icon: "🖼️", ext: ".bmp" },
+            { icon: "📊", ext: ".xls" },
+            { icon: "📝", ext: ".doc" },
+            { icon: "🎵", ext: ".wav" },
+            { icon: "🎬", ext: ".avi" },
+            { icon: "💾", ext: ".exe" },
+            { icon: "📁", ext: "" },
+          ];
+          const fileNames = [
+            "old_file",
+            "backup",
+            "temp",
+            "test",
+            "draft",
+            "copy",
+            "new",
+            "untitled",
+            "document",
+            "report",
+            "image",
+            "photo",
+            "screenshot",
+            "download",
+            "archive",
+            "project",
+            "data",
+            "readme",
+            "notes",
+            "memo",
+            "letter",
+            "resume",
+            "budget",
+          ];
+          for (let i = 0; i < 150; i++) {
+            const fileType = fileTypes[Math.floor(Math.random() * fileTypes.length)];
+            const fileName = fileNames[Math.floor(Math.random() * fileNames.length)];
+            const number = Math.floor(Math.random() * 999) + 1;
+            if (i === 75) {
+              trashFiles.push({
+                icon: '<img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 32px; height: 32px; image-rendering: pixelated;">',
+                name: "token_TOKEN.dat",
+                isToken: true,
+              });
+            } else {
+              trashFiles.push({
+                icon: fileType.icon,
+                name: `${fileName}${number}${fileType.ext}`,
+                isToken: false,
+              });
+            }
+          }
+          const trashHTML = trashFiles
+            .map(
+              (file, index) => `
+            <div style="display: inline-block; width: 80px; text-align: center; padding: 8px; margin: 4px; cursor: ${file.isToken ? "pointer" : "default"}; vertical-align: top;" class="${file.isToken ? "trash-token" : ""}" data-index="${index}">
+              <div style="font-size: 32px; margin-bottom: 4px;">${file.icon}</div>
+              <div style="font-size: 9px; word-wrap: break-word; color: ${file.isToken ? "#00ff88" : "#000000"}; font-weight: ${file.isToken ? "bold" : "normal"};">${file.name}</div>
+            </div>
+          `,
+            )
+            .join("");
+          const content = `
+            <div style="padding: 8px;">
+              <div style="margin-bottom: 8px; font-weight: bold;">
+                Recycle Bin <span style="color: #666; font-weight: normal;">(${trashFiles.length} items)</span>
+              </div>
+              <div style="background: #ffffff; border: 2px solid #808080; border-style: inset; padding: 8px; height: 300px; overflow-y: scroll;">
+                ${trashHTML}
+              </div>
+              <div style="margin-top: 8px; font-size: 10px; color: #666;">
+                💡 Tip: Scroll down to find something valuable...
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Recycle Bin",
+            content,
+            width: 450,
+            height: 420,
+            x: 100,
+            y: 60,
+            menuBar: true,
+            statusBar: true,
+          });
+          setTimeout(() => {
+            const tokenItem = win.querySelector(".trash-token");
+            if (tokenItem) {
+              tokenItem.addEventListener("click", () => {
+                this.foundToken("recycle-bin-token");
+              });
+            }
+          }, 100);
+        }
+
+        openPaint() {
+          const content = `
+            <div style="display: flex; flex-direction: column; height: 100%; background: #c0c0c0;">
+              <div style="padding: 4px; border-bottom: 2px solid #808080; display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="win95 paint-tool" data-tool="pen" style="padding: 4px 8px; min-width: 40px;">✏️</button>
+                <button class="win95 paint-tool" data-tool="eraser" style="padding: 4px 8px; min-width: 40px;">🧹</button>
+                <div style="border-left: 2px solid #808080; height: 20px; margin: 0 4px;"></div>
+                <button class="win95 paint-color" data-color="#000000" style="padding: 4px; min-width: 24px; background: #000000;"></button>
+                <button class="win95 paint-color" data-color="#00ff88" style="padding: 4px; min-width: 24px; background: #00ff88;"></button>
+                <button class="win95 paint-color" data-color="#ff0066" style="padding: 4px; min-width: 24px; background: #ff0066;"></button>
+                <button class="win95 paint-color" data-color="#0000ff" style="padding: 4px; min-width: 24px; background: #0000ff;"></button>
+                <button class="win95 paint-color" data-color="#ffff00" style="padding: 4px; min-width: 24px; background: #ffff00;"></button>
+                <button class="win95 paint-color" data-color="#ffffff" style="padding: 4px; min-width: 24px; background: #ffffff; border: 1px solid #000;"></button>
+                <div style="border-left: 2px solid #808080; height: 20px; margin: 0 4px;"></div>
+                <button class="win95" id="paint-clear" style="padding: 4px 8px;">Clear</button>
+              </div>
+              <div style="flex: 1; padding: 8px; overflow: hidden;">
+                <canvas id="paint-canvas" width="400" height="300" style="background: white; border: 2px solid #808080; border-style: inset; cursor: crosshair; image-rendering: pixelated;"></canvas>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Paint - G3.OS Edition",
+            content,
+            width: 450,
+            height: 420,
+            x: 150,
+            y: 80,
+          });
+          setTimeout(() => {
+            this.initPaint();
+          }, 100);
+        }
+
+        initPaint() {
+          const canvas = document.getElementById("paint-canvas");
+          if (!canvas) return;
+          const ctx = canvas.getContext("2d");
+          let isDrawing = false;
+          let currentColor = "#000000";
+          let currentTool = "pen";
+          let brushSize = 4;
+          document.querySelectorAll(".paint-tool").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              currentTool = btn.dataset.tool;
+              document.querySelectorAll(".paint-tool").forEach((b) => (b.style.borderColor = ""));
+              btn.style.borderColor = "#00ff88";
+            });
+          });
+          document.querySelectorAll(".paint-color").forEach((btn) => {
+            btn.addEventListener("click", () => {
+              currentColor = btn.dataset.color;
+              document.querySelectorAll(".paint-color").forEach((b) => (b.style.outline = ""));
+              btn.style.outline = "2px solid #00ff88";
+            });
+          });
+          const clearBtn = document.getElementById("paint-clear");
+          if (clearBtn) {
+            clearBtn.addEventListener("click", () => {
+              ctx.fillStyle = "white";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+            });
+          }
+          canvas.addEventListener("mousedown", (e) => {
+            isDrawing = true;
+            draw(e);
+          });
+          canvas.addEventListener("mousemove", (e) => {
+            if (isDrawing) draw(e);
+          });
+          canvas.addEventListener("mouseup", () => {
+            isDrawing = false;
+            ctx.beginPath();
+          });
+          canvas.addEventListener("mouseleave", () => {
+            isDrawing = false;
+            ctx.beginPath();
+          });
+          function draw(e) {
+            if (!isDrawing) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            ctx.lineWidth = brushSize;
+            ctx.lineCap = "square";
+            ctx.lineJoin = "miter";
+            if (currentTool === "pen") {
+              ctx.strokeStyle = currentColor;
+              ctx.lineTo(x, y);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+            } else if (currentTool === "eraser") {
+              ctx.fillStyle = "white";
+              ctx.fillRect(x - brushSize / 2, y - brushSize / 2, brushSize, brushSize);
+            }
+          }
+          ctx.fillStyle = "white";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        openFloppyDisk() {
+          const content = `
+            <div style="padding: 8px;">
+              <div style="margin-bottom: 12px; font-weight: bold;">3½ Floppy (A:)</div>
+              <div style="display: grid; grid-template-columns: repeat(3, 100px); gap: 16px;">
+                <div style="text-align: center; cursor: pointer;" class="secrets-file">
+                  <div style="font-size: 32px;">📄</div>
+                  <div style="font-size: 10px;">secrets.txt</div>
+                </div>
+                <div style="text-align: center;">
+                  <div style="font-size: 32px;">📁</div>
+                  <div style="font-size: 10px;">old_files</div>
+                </div>
+                <div style="text-align: center; cursor: pointer;" class="paint-file">
+                  <div style="font-size: 32px;">🎨</div>
+                  <div style="font-size: 10px;">paint.exe</div>
+                </div>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "3½ Floppy (A:)",
+            content,
+            width: 380,
+            height: 250,
+            x: 140,
+            y: 100,
+            menuBar: true,
+            statusBar: true,
+          });
+          setTimeout(() => {
+            const secretsFile = win.querySelector(".secrets-file");
+            if (secretsFile) {
+              secretsFile.addEventListener("dblclick", () => {
+                this.openSecretsFile();
+              });
+            }
+            const paintFile = win.querySelector(".paint-file");
+            if (paintFile) {
+              paintFile.addEventListener("dblclick", () => {
+                this.openPaint();
+              });
+            }
+          }, 100);
+        }
+
+        openSecretsFile() {
+          const content = `
+    <div style="padding: 12px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.6;">
+      <div style="text-align: center; margin-bottom: 12px; font-weight: bold; color: #00ff88;">=== G3.OS SECRET ARCHIVES ===</div>
+      <div style="margin-bottom: 8px;">Status: <span style="color: #ff0000;">CLASSIFIED</span></div>
+      <div style="margin-bottom: 8px;">Clearance Level: <span style="color: #00ff88;">GAM3R</span></div>
+      <hr style="border: 1px solid #808080; margin: 8px 0;">
+      
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #1: "The Aesthete"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Beauty lies in the eye of the beholder. Transform your canvas, claim your prize."</span><br>
+        <span class="secret-reveal" data-secret="1" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="1" style="display: none; color: #ffff00; font-size: 10px;"><br>→ My Documents → Select any wallpaper</span>
+      </div>
+      
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #2: "The Idle Mind"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "In stillness, visions emerge. Fifteen heartbeats of absolute silence..."</span><br>
+        <span class="secret-reveal" data-secret="2" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="2" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Don't move mouse/keyboard for 15 seconds</span>
+      </div>
+      
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #3: "The Incantation"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Speak our true name where commands are born. 01100111 01100001 01101101 00110011 01110011"</span><br>
+        <span class="secret-reveal" data-secret="3" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="3" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Start → Run → Decode binary → Type result</span>
+      </div>
+      
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #4: "The Persistent One"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "The metal guardian watches you. Persistence shall be rewarded. Six is the number."</span><br>
+        <span class="secret-reveal" data-secret="4" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="4" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Click Clippy 6 times on sticky note</span>
+      </div>
+      
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #5: "The Archaeologist"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Among the discarded remnants at depth 75, treasure awaits the patient scroller."</span><br>
+        <span class="secret-reveal" data-secret="5" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="5" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Recycle Bin → Scroll to item 75</span>
+      </div>
+      
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #00ff88;">
+        <strong>TOKEN #6: "The Minimalist"</strong><br>
+        <span style="color: #888; font-size: 10px;">Hint: "Five windows hidden bring chaos unveiled. The system breaks, rewards prevail."</span><br>
+        <span class="secret-reveal" data-secret="6" style="color: #00ff88; cursor: pointer; font-size: 9px; text-decoration: underline;">[REVEAL SOLUTION]</span>
+        <span class="secret-answer" data-secret="6" style="display: none; color: #ffff00; font-size: 10px;"><br>→ Minimize 5 windows simultaneously</span>
+      </div>
+      
+      <hr style="border: 1px solid #808080; margin: 12px 0;">
+      
+      <div style="margin: 10px 0; padding: 8px; background: rgba(0,0,0,0.2); border-left: 3px solid #ff8800;">
+        <strong>CRYPTIC WHISPERS (Location Unknown):</strong><br>
+        <span style="color: #888; font-size: 10px;">• "In the machine's heart, seek wisdom's menu"</span><br>
+        <span style="color: #888; font-size: 10px;">• "Where searches begin, rewards may end"</span><br>
+        <span style="color: #888; font-size: 10px;">• "Binary speaks to those with eyes to see" [Req: 2 tokens]</span><br>
+        <span style="color: #888; font-size: 10px;">• "Gifts arrive for the dedicated collector" [Req: 4 tokens]</span><br>
+        <span style="color: #888; font-size: 10px;">• "Silver disc holds explosive challenges"</span>
+      </div>
+      
+      <hr style="border: 1px solid #808080; margin: 12px 0;">
+      <div style="text-align: center; font-size: 9px; color: #666;">
+        "The path is hidden, the rewards immense."<br>
+        "Six fragments unlock what lies beyond."<br>
+        <span style="color: #00ff88;">- Cipher Master, G3.OS Archives</span>
+      </div>
+    </div>
+  `;
+          const win = this.createWindow({
+            title: "Notepad - secrets.txt",
+            content,
+            width: 480,
+            height: 450,
+            x: 200,
+            y: 60,
+          });
+          setTimeout(() => {
+            const revealButtons = win.querySelectorAll(".secret-reveal");
+            revealButtons.forEach((btn) => {
+              btn.addEventListener("click", () => {
+                const secretNum = btn.dataset.secret;
+                const answer = win.querySelector(`.secret-answer[data-secret="${secretNum}"]`);
+                if (answer) {
+                  answer.style.display = "inline";
+                  btn.style.display = "none";
+                }
+              });
+            });
+          }, 100);
+        }
+
+        openCDROM() {
+          const content = `
+            <div style="padding: 8px;">
+              <div style="margin-bottom: 12px; font-weight: bold;">CD-ROM (D:)</div>
+              <div style="text-align: center; margin: 20px 0;">
+                <div style="font-size: 48px; margin-bottom: 12px;">📀</div>
+                <p style="color: #666; margin-bottom: 16px;">GAM3RS Retro Games Collection</p>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(2, 140px); gap: 16px; justify-content: center;">
+                <div style="text-align: center; cursor: pointer;" class="minesweeper-icon">
+                  <div style="font-size: 32px;">💣</div>
+                  <div style="font-size: 10px;">minesweeper.exe</div>
+                </div>
+                <div style="text-align: center; opacity: 0.5;">
+                  <div style="font-size: 32px;">🎮</div>
+                  <div style="font-size: 10px;">more_games.exe</div>
+                </div>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "CD-ROM (D:)",
+            content,
+            width: 360,
+            height: 280,
+            x: 180,
+            y: 120,
+            menuBar: true,
+            statusBar: true,
+          });
+          setTimeout(() => {
+            const minesweeperIcon = win.querySelector(".minesweeper-icon");
+            if (minesweeperIcon) {
+              minesweeperIcon.addEventListener("dblclick", () => {
+                this.openMinesweeper();
+              });
+            }
+          }, 100);
+        }
+
+        openMinesweeper() {
+          const gridSize = 10;
+          const cellSize = 24;
+          let grid = [];
+          let revealed = [];
+          let mineCount = 10;
+          for (let i = 0; i < gridSize; i++) {
+            grid[i] = [];
+            revealed[i] = [];
+            for (let j = 0; j < gridSize; j++) {
+              grid[i][j] = 0;
+              revealed[i][j] = false;
+            }
+          }
+          let placedMines = 0;
+          while (placedMines < mineCount) {
+            const x = Math.floor(Math.random() * gridSize);
+            const y = Math.floor(Math.random() * gridSize);
+            if (grid[x][y] !== -1) {
+              grid[x][y] = -1;
+              placedMines++;
+            }
+          }
+          for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+              if (grid[i][j] === -1) continue;
+              let count = 0;
+              for (let di = -1; di <= 1; di++) {
+                for (let dj = -1; dj <= 1; dj++) {
+                  const ni = i + di;
+                  const nj = j + dj;
+                  if (ni >= 0 && ni < gridSize && nj >= 0 && nj < gridSize && grid[ni][nj] === -1) {
+                    count++;
+                  }
+                }
+              }
+              grid[i][j] = count;
+            }
+          }
+          const content = `
+            <div style="background: #c0c0c0; padding: 8px;">
+              <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <span>💣 Mines: ${mineCount}</span>
+                <button class="win95" id="mine-reset">😊 New Game</button>
+              </div>
+              <div id="minefield" style="display: grid; grid-template-columns: repeat(${gridSize}, ${cellSize}px); gap: 0; border: 2px solid #808080; border-style: inset; background: #c0c0c0; width: fit-content;"></div>
+              <div style="margin-top: 8px; font-size: 10px; color: #666;">Click to reveal - No flags needed!</div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Minesweeper",
+            content,
+            width: gridSize * cellSize + 40,
+            height: gridSize * cellSize + 120,
+            x: 100,
+            y: 60,
+          });
+          setTimeout(() => {
+            const minefield = document.getElementById("minefield");
+            if (!minefield) return;
+            const resetBtn = document.getElementById("mine-reset");
+            if (resetBtn) {
+              resetBtn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+                setTimeout(() => this.openMinesweeper(), 100);
+              });
+            }
+            for (let i = 0; i < gridSize; i++) {
+              for (let j = 0; j < gridSize; j++) {
+                const cell = document.createElement("div");
+                cell.style.width = cellSize + "px";
+                cell.style.height = cellSize + "px";
+                cell.style.border = "1px solid #808080";
+                cell.style.background = "#c0c0c0";
+                cell.style.display = "flex";
+                cell.style.alignItems = "center";
+                cell.style.justifyContent = "center";
+                cell.style.fontSize = "12px";
+                cell.style.cursor = "pointer";
+                cell.style.userSelect = "none";
+                cell.dataset.x = i;
+                cell.dataset.y = j;
+                cell.addEventListener("click", () => {
+                  if (!revealed[i][j]) {
+                    revealCell(i, j);
+                  }
+                });
+                minefield.appendChild(cell);
+              }
+            }
+            const revealCell = (x, y) => {
+              if (revealed[x][y]) return;
+              revealed[x][y] = true;
+              const cell = minefield.children[x * gridSize + y];
+              cell.style.background = "#ffffff";
+              cell.style.border = "1px solid #808080";
+              if (grid[x][y] === -1) {
+                cell.textContent = "💣";
+                gameOver(false);
+              } else if (grid[x][y] === 0) {
+                for (let di = -1; di <= 1; di++) {
+                  for (let dj = -1; dj <= 1; dj++) {
+                    const ni = x + di;
+                    const nj = y + dj;
+                    if (ni >= 0 && ni < gridSize && nj >= 0 && nj < gridSize) {
+                      revealCell(ni, nj);
+                    }
+                  }
+                }
+              } else {
+                const colors = [
+                  "",
+                  "#0000ff",
+                  "#008000",
+                  "#ff0000",
+                  "#000080",
+                  "#800000",
+                  "#008080",
+                  "#000000",
+                  "#808080",
+                ];
+                cell.textContent = grid[x][y];
+                cell.style.color = colors[grid[x][y]];
+                cell.style.fontWeight = "bold";
+              }
+              checkWin();
+            };
+            const checkWin = () => {
+              let revealedCount = 0;
+              for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                  if (revealed[i][j]) revealedCount++;
+                }
+              }
+              if (revealedCount === gridSize * gridSize - mineCount) {
+                gameOver(true);
+              }
+            };
+            const gameOver = (won) => {
+              if (won) {
+                for (let i = 0; i < gridSize; i++) {
+                  for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === -1) {
+                      const cell = minefield.children[i * gridSize + j];
+                      cell.textContent = "🚩";
+                      cell.style.background = "#00ff88";
+                    }
+                  }
+                }
+                if (!localStorage.getItem("minesweeper-won")) {
+                  localStorage.setItem("minesweeper-won", "true");
+                  document.getElementById("task4").checked = true;
+                  setTimeout(() => {
+                    this.foundToken("minesweeper-victory");
+                  }, 500);
+                }
+              } else {
+                for (let i = 0; i < gridSize; i++) {
+                  for (let j = 0; j < gridSize; j++) {
+                    if (grid[i][j] === -1) {
+                      const cell = minefield.children[i * gridSize + j];
+                      cell.textContent = "💣";
+                      cell.style.background = "#ff0000";
+                    }
+                  }
+                }
+              }
+            };
+          }, 100);
+        }
+
+        openHelp() {
+          const content = `
+            <div style="padding: 8px;">
+              <h3>Windows Help</h3>
+              <p>Welcome to G3.OS Classic Edition!</p>
+              <br>
+              <p>This is a simulation of Windows 95/98 interface.</p>
+              <br>
+              <p>Available features:</p>
+              <ul style="margin-left: 20px;">
+                <li>Click Start to open the Start Menu</li>
+                <li>Double-click icons to open applications</li>
+                <li>Drag windows by their title bar</li>
+                <li>Minimize windows to the taskbar</li>
+              </ul>
+              <br>
+              <button class="win95 close-window-btn">OK</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Help",
+            content,
+            width: 350,
+            height: 280,
+          });
+          setTimeout(() => {
+            const btn = win.querySelector(".close-window-btn");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 50);
+        }
+
+        showRunDialog() {
+          const content = `
+            <div style="padding: 8px;">
+              <p>Type the name of a program, folder, document, or Internet resource, and Windows will open it for you.</p>
+              <br>
+              <label>Open:</label><br>
+              <input type="text" class="win95" id="run-input" style="width: 100%; margin: 4px 0;">
+              <br><br>
+              <div style="text-align: right;">
+                <button class="win95" id="run-ok" style="margin-right: 4px;">OK</button>
+                <button class="win95 close-window-btn" style="margin-right: 4px;">Cancel</button>
+                <button class="win95">Browse...</button>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Run",
+            content,
+            width: 350,
+            height: 180,
+          });
+          setTimeout(() => {
+            const input = document.getElementById("run-input");
+            const okBtn = document.getElementById("run-ok");
+            const cancelBtn = win.querySelector(".close-window-btn");
+            if (okBtn && input) {
+              okBtn.addEventListener("click", () => {
+                const command = input.value.toLowerCase().trim();
+                if (command === "gam3s") {
+                  this.showAchievement();
+                  this.closeWindow(win.id);
+                }
+              });
+            }
+            if (cancelBtn) {
+              cancelBtn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 100);
+        }
+
+        showAchievement() {
+          const content = `
+            <div style="padding: 24px; text-align: center; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);">
+              <div style="font-size: 64px; margin-bottom: 16px;">🏆</div>
+              <h2 style="color: #00ff88; font-size: 28px; margin-bottom: 12px; text-shadow: 0 0 10px #00ff88;">ACHIEVEMENT UNLOCKED!</h2>
+              <h3 style="color: #ffffff; font-size: 18px; margin-bottom: 20px;">"True GAM3R"</h3>
+              <div style="background: rgba(0,255,136,0.1); border: 2px solid #00ff88; padding: 16px; margin: 20px 0; border-radius: 8px;">
+                <p style="color: #ffffff; font-size: 14px; line-height: 1.6;">You discovered the sacred command!<br>Welcome to the GAM3RS community.</p>
+              </div>
+              <p style="color: #888; font-size: 12px; margin-top: 16px;">Visit <span style="color: #00ff88; font-weight: bold;">gam3s.gg</span> to unlock more gaming adventures!</p>
+              <br>
+              <button class="win95 close-window-btn" style="background: #00ff88; font-weight: bold;">AWESOME!</button>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "🎮 Achievement Unlocked!",
+            content,
+            width: 400,
+            height: 400,
+            x: window.innerWidth / 2 - 200,
+            y: window.innerHeight / 2 - 200,
+          });
+          setTimeout(() => {
+            const btn = win.querySelector(".close-window-btn");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 50);
+        }
+
+        showShutdownDialog() {
+          const content = `
+    <div style="padding: 16px; text-align: center;">
+      <p style="margin-bottom: 16px;">What do you want the computer to do?</p>
+      <div style="margin: 16px 0;">
+        <input type="radio" class="win95" name="shutdown" checked> Shut down<br>
+        <input type="radio" class="win95" name="shutdown"> Restart<br>
+        <input type="radio" class="win95" name="shutdown"> Restart in MS-DOS mode<br>
+        <input type="radio" class="win95" name="shutdown"> Stand by<br>
+      </div>
+      <br>
+      <button class="win95" id="shutdown-ok-btn">OK</button>
+      <button class="win95" id="shutdown-cancel-btn" style="margin-left: 8px;">Cancel</button>
+    </div>
+  `;
+          const win = this.createWindow({
+            title: "Shut Down Windows",
+            content,
+            width: 300,
+            height: 220,
+          });
+          setTimeout(() => {
+            const okBtn = document.getElementById("shutdown-ok-btn");
+            const cancelBtn = document.getElementById("shutdown-cancel-btn");
+            if (okBtn) {
+              okBtn.addEventListener("click", () => {
+                this.shutdown(); // ✅ Appelle via this
+              });
+            }
+            if (cancelBtn) {
+              cancelBtn.addEventListener("click", () => {
+                this.closeWindow(win.id);
+              });
+            }
+          }, 100);
+        }
+        openFindToken() {
+          const content = `
+            <div style="padding: 16px;">
+              <div style="text-align: center; margin-bottom: 16px;">
+                <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 48px; height: 48px; image-rendering: pixelated;">
+                <h3>Find <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 16px; height: 16px; vertical-align: middle; image-rendering: pixelated;"> Tokens</h3>
+              </div>
+              <p style="margin-bottom: 12px;">Hidden <img src="https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/coins-D4YcJodORLFkqIkrlH14b79Kvn9Y2Z.webp?lAm1" style="width: 12px; height: 12px; vertical-align: middle; image-rendering: pixelated;"> tokens are scattered throughout G3.OS!</p>
+              <p style="margin-bottom: 12px;">Current progress: <strong>${this.tokensFound}/6</strong></p>
+              <div style="background: #ffffff; border: 2px solid #808080; border-style: inset; padding: 8px; margin: 12px 0;">
+                <p style="font-size: 10px; color: #666;">💡 Tip: Try exploring different menus and clicking on things...</p>
+              </div>
+              <div style="text-align: center; margin-top: 16px;">
+                <button class="win95" id="find-token-btn" style="background: #00ff88; font-weight: bold;">Find a Token!</button>
+              </div>
+            </div>
+          `;
+          const win = this.createWindow({
+            title: "Find - Tokens",
+            content,
+            width: 350,
+            height: 300,
+            x: 100,
+            y: 100,
+          });
+          setTimeout(() => {
+            const btn = document.getElementById("find-token-btn");
+            if (btn) {
+              btn.addEventListener("click", () => {
+                this.foundToken("find-menu-token");
+              });
+            }
+          }, 100);
+        }
+      }
+
+      const simOS = new SimOSClassic();
+    </script>
+
+    <script>
+      // Farcade SDK integration and graceful error handling + shutdown override
+      window.addEventListener("load", () => {
+        // 1) Signal SDK that the game is ready (do not end the game here)
+        try {
+          window.FarcadeSDK?.singlePlayer?.actions?.ready?.();
+          console.log("FarcadeSDK: ready() sent");
+        } catch (e) {
+          console.warn("FarcadeSDK ready() failed", e);
+        }
+      });
+
+      // 2) Handle SDK events
+      try {
+        window.FarcadeSDK?.on?.("play_again", () => {
+          // Simple reset strategy: reload everything
+          location.reload();
+        });
+        window.FarcadeSDK?.on?.("toggle_mute", (data) => {
+          window.__isMuted = !!(data && data.isMuted);
+        });
+      } catch (e) {
+        console.warn("FarcadeSDK event binding failed", e);
+      }
+
+      // 3) Patch shutdown to count as a loss and show BSOD after 3s
+      try {
+        if (window.simOS && typeof window.simOS.shutdown === "function") {
+          const originalShutdown = window.simOS.shutdown.bind(window.simOS);
+          window.simOS.shutdown = function () {
+            try {
+              window.FarcadeSDK?.singlePlayer?.actions?.gameOver({ score: 0 });
+            } catch (e) {
+              console.warn("FarcadeSDK gameOver() failed", e);
+            }
+            setTimeout(() => {
+              const bsod = document.getElementById("bsod");
+              if (bsod) bsod.classList.add("visible");
+            }, 3000);
+            // Do not call originalShutdown to avoid replacing the DOM unexpectedly
+          };
+        }
+      } catch (e) {
+        console.warn("Shutdown override failed", e);
+      }
+
+      // 4) Patch victory to send a gameOver signal with a positive score
+      try {
+        if (window.simOS && typeof window.simOS.showVictoryScreen === "function") {
+          const originalVictory = window.simOS.showVictoryScreen.bind(window.simOS);
+          window.simOS.showVictoryScreen = function (...args) {
+            try {
+              window.FarcadeSDK?.singlePlayer?.actions?.gameOver({ score: 1 });
+            } catch (e) {
+              console.warn("FarcadeSDK gameOver() on victory failed", e);
+            }
+            return originalVictory(...args);
+          };
+        }
+      } catch (e) {
+        console.warn("Victory patch failed", e);
+      }
+
+      // 5) Avoid noisy [object Object] unhandled rejections by handling them ourselves
+      window.addEventListener("unhandledrejection", (event) => {
+        try {
+          event?.preventDefault?.();
+        } catch (_) {}
+        console.error("Unhandled promise rejection:", event?.reason);
+      });
+    </script>
+  
+<script>
+// Startup sound injection
+(function(){
+  const STARTUP_SOUND_URL = "https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/windows-31-startup-sound-classic-retro-computer-booting-audio-332124-xKufNwWxoLKqJbjh8AC88hLyiPgJRj.mp3?GUwv";
+  let startupAudio;
+  let startupPlayed = false;
+  let isMuted = false;
+  let interactionHandler;
+
+  function ensureAudio(){
+    if (!startupAudio) {
+      startupAudio = new Audio(STARTUP_SOUND_URL);
+      startupAudio.preload = 'auto';
+    }
+  }
+
+  function tryPlayStartup(){
+    if (startupPlayed || isMuted) return;
+    ensureAudio();
+    try {
+      startupAudio.currentTime = 0;
+      const p = startupAudio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(()=>{ startupPlayed = true; cleanupInteraction(); }).catch(()=>{/* wait for user gesture */});
+      } else {
+        startupPlayed = true;
+        cleanupInteraction();
+      }
+    } catch(e) {
+      // Likely blocked; wait for user gesture
+    }
+  }
+
+  function onFirstUserGesture(){
+    tryPlayStartup();
+  }
+
+  function cleanupInteraction(){
+    if (interactionHandler) {
+      window.removeEventListener('pointerdown', interactionHandler, { passive: true });
+      interactionHandler = null;
+    }
+  }
+
+  // Hook into Farcade/Remix SDK if available for mute handling
+  function setupSDKHooks(){
+    if (window.FarcadeSDK && typeof window.FarcadeSDK.on === 'function') {
+      window.FarcadeSDK.on('toggle_mute', (data) => {
+        isMuted = !!(data && data.isMuted);
+        if (isMuted) {
+          ensureAudio();
+          try { startupAudio.pause(); } catch(e){}
+        } else {
+          tryPlayStartup();
+        }
+      });
+      // Also replay on play_again if desired
+      window.FarcadeSDK.on('play_again', () => {
+        startupPlayed = false;
+        tryPlayStartup();
+      });
+    }
+  }
+
+  window.addEventListener('load', () => {
+    // Attempt autoplay (may be blocked by browser policies)
+    tryPlayStartup();
+    // Fallback: play on first user interaction
+    interactionHandler = onFirstUserGesture;
+    window.addEventListener('pointerdown', interactionHandler, { passive: true, once: false });
+    setupSDKHooks();
+  });
+})();
+</script>
+
+<!-- Background music injection -->
+<script>
+(function(){
+  const MUSIC_URL = 'https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/8-bit-loop-189494-ITYFxJoYU7T7DCsrnHiX3drNMjEjLn.mp3?6Wvn';
+  let bgm;
+  let muted = false;
+  let userInteracted = false;
+
+  function ensureAudio(){
+    if (!bgm) {
+      bgm = new Audio(MUSIC_URL);
+      bgm.loop = true;
+      bgm.volume = 0.15; // low volume as requested
+    }
+    return bgm;
+  }
+
+  function tryPlay(){
+    const a = ensureAudio();
+    if (muted || !userInteracted) return;
+    a.play().catch(()=>{});
+  }
+
+  function pause(){ const a = ensureAudio(); a.pause(); }
+  function stop(){ const a = ensureAudio(); a.pause(); a.currentTime = 0; }
+
+  function onUserInteract(){
+    userInteracted = true;
+    document.removeEventListener('click', onUserInteract);
+    document.removeEventListener('touchstart', onUserInteract);
+    tryPlay();
+  }
+
+  document.addEventListener('click', onUserInteract, { once: true, passive: true });
+  document.addEventListener('touchstart', onUserInteract, { once: true, passive: true });
+
+  // Respect page visibility
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      pause();
+    } else {
+      tryPlay();
+    }
+  });
+
+  // Farcade/Remix SDK hooks if available
+  if (window.FarcadeSDK && window.FarcadeSDK.on) {
+    window.FarcadeSDK.on('toggle_mute', (data) => {
+      muted = !!data.isMuted;
+      if (muted) {
+        pause();
+      } else {
+        tryPlay();
+      }
+    });
+
+    window.FarcadeSDK.on('play_again', () => {
+      tryPlay();
+    });
+  }
+
+  // Expose simple controls if game wants to manage music
+  window.__bgm = {
+    play: () => { userInteracted = true; tryPlay(); },
+    pause,
+    stop,
+    setVolume: (v) => { ensureAudio().volume = Math.max(0, Math.min(1, v)); }
+  };
+})();
+</script>
+
+<script>
+// Dial-up click sound integration
+(function(){
+  const DIALUP_SOUND_URL = 'https://remix.gg/blob/b3b21fdf-a36d-42d1-a11f-4b30a0f60f37/old-internet-modem-dialing-189735-QNxI4m8nneDn57WRmVKWNSmr3OVluw.mp3?Rzvi';
+  const dialUpAudio = new Audio(DIALUP_SOUND_URL);
+  dialUpAudio.preload = 'auto';
+  let isMuted = typeof window.isMuted === 'boolean' ? window.isMuted : false;
+
+  // If Farcade/Remix SDK exposes mute toggles, keep in sync
+  if (window.FarcadeSDK && typeof window.FarcadeSDK.on === 'function') {
+    window.FarcadeSDK.on('toggle_mute', (data) => {
+      if (data && typeof data.isMuted === 'boolean') {
+        isMuted = data.isMuted;
+        dialUpAudio.muted = isMuted;
+      }
+    });
+  }
+
+  function playDialUpSound(){
+    dialUpAudio.muted = !!isMuted;
+    try {
+      dialUpAudio.currentTime = 0;
+      const p = dialUpAudio.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {});
+      }
+    } catch(e) {}
+  }
+
+  // Helper: detect elements that likely represent the Dial Up action
+  function containsDialUpText(el){
+    if (!el) return false;
+    const txt = (el.textContent || '').toLowerCase();
+    return txt.includes('dial up') || txt.includes('dial-up') || txt.includes('connexion commutée') || txt.includes('modem');
+  }
+
+  // Global delegated click listener to catch clicks on the Dial Up item anywhere
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    // Common selectors an app/icon might use
+    const selector = '[data-action="dial-up"], [data-app="dial-up"], [data-id="dial-up"], #dial-up, .dial-up, [aria-label*="Dial Up" i], [title*="Dial Up" i]';
+    const match = target.closest ? target.closest(selector) : null;
+
+    if (match || containsDialUpText(target) || containsDialUpText(target.closest && target.closest('[role="button"], .icon, .shortcut, .menu-item, .item'))) {
+      playDialUpSound();
+    }
+  }, true); // capture to run before other handlers, but harmless if bubbling
+})();
+</script>
+</body>
+</html>
